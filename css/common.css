@@ -36,3 +36,7 @@ td[title]{cursor:help;}
 td[id*="user"]{width:35%;}
 
 #fieldPlace{ min-height:200px;}
+#msgPlace{color:green;}
+.red{color:red;}
+.blue{color:#3204b9;}
+.yellow{color:yellow;}
