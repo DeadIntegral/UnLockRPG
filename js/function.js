@@ -105,7 +105,7 @@ var printEnemyList = function(Num){
 };
 
 var e = {};
-var u;
+var u = {};
 var statBattle = function(emyNum){
 	if(userData.status.battle == 0){
 		userData.status.battle=1;
@@ -154,14 +154,15 @@ var readyStat = function(o){
 	o.eid=(typeof o.eid != 'undefined')?o.eid:0;
 	o.eea=(typeof o.eea != 'undefined')?o.eea:0;
 	o.eed=(typeof o.eed != 'undefined')?o.eed:0;
-	o.gold = (typeof o.gold != 'undefined')?o.gold:0;
+	//o.gold = (typeof o.gold != 'undefined')?o.gold:0;
 	return o;
 };
 
 var userAtk = function(emyNum){
 	var tdmg=0;
 	var pdmg = u.pa-e.pd;
-	var mdmg = u.ma-e.md;
+	//var mdmg = u.ma-e.md;
+	var mdmg = (u.ma>0)?(u.ma-e.md):0;
 	var efdmg = u.efa-e.efd;
 	var eidmg = u.eia-e.eid;
 	var eedmg = u.eea-e.eed;
@@ -170,16 +171,24 @@ var userAtk = function(emyNum){
 	e.nhp-=tdmg;
 	$('#eHp').html(e.nhp+' / '+e.hp);
 	if(e.nhp<=0){
+		var output = 'Win! Kill '+e.name+'! Exp+'+e.exp;
+		if(typeof u.gold != 'undefined' && typeof e.gold != 'undefined'){output+=' Gold+'+e.gold;}
+		if(e.honor >0){output+='honor+'+e.honor;}
+		printMsg(output);
+		
 		userData.status.battle=0;
 		if(typeof e.exp != 'undefined'){userData.stat.exp+=e.exp; $('#userExp').html(userData.stat.exp);}
 		if(typeof e.gold != 'undefined'){userData.stat.gold+=e.gold; $('#userGold').html(userData.stat.gold);}
-		if(typeof e.unlock != 'undefined'){userData.hunt[e.unlock]=1; printEnemyList(userData.status.thisPlace);} //무거워지면 모듈로 만들기
-		if(typeof e.unlockField != 'undefined' && userData.field[e.unlockField] != 1){userData.field[e.unlockField]=1; unlockField(e.unlockField);}
+		if(typeof e.unlock != 'undefined' && typeof userData.hunt[e.unlock] == 'undefined'){
+			userData.hunt[e.unlock]=1; printEnemyList(userData.status.thisPlace);
+			printMsg('<span class="blue">'+enemyData[e.unlock].name+' 발견!</span>');
+		}
+		if(typeof e.unlockField != 'undefined' && typeof userData.hunt[e.unlock] == 'undefined'){
+			userData.field[e.unlockField]=1; unlockField(e.unlockField);
+			printMsg('<span class="yellow">'+fieldData[e.unlockField].name+' 발견!</span>');
+		}
 		$('#userHP').html(userData.stat.hp);
 		$('#battlePlace').html('');
-		var output = 'Win! Kill '+e.name+'! Exp+'+e.exp+' Gold+'+e.gold;
-		if(e.honor >0){output+='honor+'+e.honor;}
-		printMsg(output);
 		e={};
 	}else{
 		enemyTurn();
@@ -193,7 +202,7 @@ var enemyTurn = function(){
 		userData.status.battle=0;
 		$('#userHP').html(userData.stat.hp);
 		$('#battlePlace').html('');
-		printMsg('defeated by '+e.name);
+		printMsg('<span class="red">Defeated by '+e.name+'</span>');
 		e={};
 	}
 };
