@@ -1,1 +1,43 @@
 body{font-size: 14px;}
+table{width:100%;}
+
+#userData{
+  margin-bottom: 10px;
+  box-shadow: 8px 8px 4px #888888;
+}
+
+#fieldMonList{box-shadow: 8px 8px 4px #888888;}
+
+td[title]{cursor:help;}
+
+.btn{
+  white-space: nowrap;
+	margin: 2px;
+	cursor: pointer;
+	background-color: #aaa;
+	text-align:center;
+}
+.btn:hover{
+	background-color: #666;
+	color:#ff0 ;
+}
+
+.fSize1{
+	width: 100px;
+	height: 60px;
+	float:left;
+	vertical-align: middle;
+}
+.clickAble:hover{
+	cursor: pointer;
+}
+
+.va-top{vertical-align: top;}
+.s-shadow{box-shadow: 4px 4px 2px #888888;}
+td[id*="user"]{
+	width:35%;
+}
+
+#fieldPlace{
+	min-height:200px;
+}
