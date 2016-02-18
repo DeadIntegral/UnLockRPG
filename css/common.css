@@ -12,32 +12,27 @@ td[title]{cursor:help;}
 
 .btn{
   white-space: nowrap;
-	margin: 2px;
-	cursor: pointer;
-	background-color: #aaa;
-	text-align:center;
+  margin: 2px;
+  cursor: pointer;
+  background-color: #aaa;
+  text-align:center;
 }
 .btn:hover{
-	background-color: #666;
-	color:#ff0 ;
+  background-color: #666;
+  color:#ff0 ;
 }
 
 .fSize1{
-	width: 100px;
-	height: 60px;
-	float:left;
-	vertical-align: middle;
+  width: 100px;
+  height: 60px;
+  float:left;
+  vertical-align: middle;
 }
-.clickAble:hover{
-	cursor: pointer;
-}
+.clickAble:hover{ cursor: pointer;}
 
 .va-top{vertical-align: top;}
 .s-shadow{box-shadow: 4px 4px 2px #888888;}
-td[id*="user"]{
-	width:35%;
-}
 
-#fieldPlace{
-	min-height:200px;
-}
+td[id*="user"]{width:35%;}
+
+#fieldPlace{ min-height:200px;}
