@@ -3,9 +3,6 @@ var checkUnlockStat = function(){
 	var output = checkUnlockFunc(num,'stat');
 	$('#unlockStat').html(output);
 };
-/*
-sample
-*/
 var checkUnlockBtn = function(){
 	var num = userData.unlock.statBtn;
 	var output = checkUnlockFunc(num,'statBtn');
