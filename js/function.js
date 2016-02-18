@@ -35,9 +35,13 @@ var unlcokFunc = function(arg){
 					var output = '<td title="">'+obj.target+'</td><td id="user'+obj.target+'"></td><td></td>';
 					checkUnlockIdle();
 					userData.stat.gold=0;
+				}else if(obj.target == 'HO'){
+					var output = '<td title="">Honor</td><td id="user'+obj.target+'"></td><td></td>'; userData.stat.honor=0;
+				}else if(obj.target == 'FA'){
+					var output = '<td title="">Fame</td><td id="user'+obj.target+'"></td><td></td>'; userData.stat.fame=0;
 				}else{
 					var output = '<td title="">'+obj.target+'</td><td id="user'+obj.target+'"></td><td id="u'+obj.target+'Up"></td>';
-					var statName = obj.target.toLocaleLowerCase();
+					var statName = obj.target.toLowerCase();
 					userData.stat[statName]=5;
 				}
 				$('#uStat'+obj.place).append(output);
@@ -171,15 +175,42 @@ var userAtk = function(emyNum){
 	e.nhp-=tdmg;
 	$('#eHp').html(e.nhp+' / '+e.hp);
 	if(e.nhp<=0){
+		userData.status.battle=0;
+		
 		var output = 'Win! Kill '+e.name+'!';
-		if(typeof e.exp != 'undefined'){output+=' Exp+'+e.exp;}
-		if(typeof u.gold != 'undefined' && typeof e.gold != 'undefined'){output+=' Gold+'+e.gold;}
-		if(e.honor >0){output+='honor+'+e.honor;}
+		
+		var list = ['exp','gold','honor','fame']; var list2 = ['Exp','Gold','Honor','Fame'];
+		for(var i=0; i<4; i++){
+			if(typeof e[list[i]] != 'undefined' && typeof e[list[i]] != 'undefined'){
+				output+=' '+list2[i]+'+'+e[list[i]];
+				userData.stat[list[i]]+=e[list[i]];
+				$('#user'+list2[i]).html(userData.stat[list[i]]);
+			}
+		}
+		/*
+		if(typeof e.exp != 'undefined'){
+			output+=' Exp+'+e.exp;
+			userData.stat.exp+=e.exp;
+			$('#userExp').html(userData.stat.exp);
+		}
+		if(typeof u.gold != 'undefined' && typeof e.gold != 'undefined'){
+			output+=' Gold+'+e.gold;
+			userData.stat.gold+=e.gold;
+			$('#userGold').html(userData.stat.gold);
+		}
+		if(typeof u.honor != 'undefined' && typeof e.honor != 'undefined'){
+			output+=' honor+'+e.honor;
+			userData.stat.honor+=e.honor;
+			$('#userHonor').html(userData.stat.honor);
+		}
+		if(typeof u.fame != 'undefined' && typeof e.fame != 'undefined'){
+			output+=' honor+'+e.fame;
+			userData.stat.fame+=e.fame;
+			$('#userFame').html(userData.stat.fame);
+		}
+		*/
 		printMsg(output);
 		
-		userData.status.battle=0;
-		if(typeof e.exp != 'undefined'){userData.stat.exp+=e.exp; $('#userExp').html(userData.stat.exp);}
-		if(typeof e.gold != 'undefined'){userData.stat.gold+=e.gold; $('#userGold').html(userData.stat.gold);}
 		if(typeof e.unlock != 'undefined' && typeof userData.hunt[e.unlock] == 'undefined'){
 			userData.hunt[e.unlock]=1; printEnemyList(userData.status.thisPlace);
 			printMsg('<span class="blue">'+enemyData[e.unlock].name+' 발견!</span>');
@@ -222,7 +253,7 @@ var statRefresh = function(){
 	var list = ['hp','mp','pa','pd','ma','md','efa','efd','eia','eid','eea','eed'];
 	for(var i=0; i<list.length; i++){
 		if(typeof userData.stat[list[i]] != 'undefined'){
-			$('#user'+list[i].toLocaleUpperCase()).html(userData.stat[list[i]]);
+			$('#user'+list[i].toUpperCase()).html(userData.stat[list[i]]);
 		}
 	}
 	/*
@@ -238,12 +269,12 @@ var statBtnRefresh = function(){
 	var list1 = ['hp','mp','pa','pd','ma','md']; var list2 = ['efa','efd','eia','eid','eea','eed'];
 	for(var i=0; i<list1.length; i++){
 		if(typeof userData.stat[list1[i]] != 'undefined'){
-			$('#u'+list1[i].toLocaleUpperCase()+'Up').html('<span class="clickAble" title="needExp: 5" onmousedown="addStat(\''+list1[i]+'\')">+</span>');
+			$('#u'+list1[i].toUpperCase()+'Up').html('<span class="clickAble" title="needExp: 5" onmousedown="addStat(\''+list1[i]+'\')">+</span>');
 		}
 	}
 	for(var i=0; i<list2.length; i++){
 		if(typeof userData.stat[list2[i]] != 'undefined'){
-			$('#u'+list2[i].toLocaleUpperCase()+'Up').html('<span class="clickAble" title="needExp: 10" onmousedown="addStat(\''+list2[i]+'\')">+</span>');
+			$('#u'+list2[i].toUpperCase()+'Up').html('<span class="clickAble" title="needExp: 10" onmousedown="addStat(\''+list2[i]+'\')">+</span>');
 		}
 	}
 };
