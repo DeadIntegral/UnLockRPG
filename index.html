@@ -11,6 +11,19 @@
     <link rel="stylesheet" href="./css/common.css">
   </head>
   <body>
+    <script>
+      (function(){
+        
+      }());
+      $(document).ready(function(){
+        $('#userHP').html(userData.stat.hp);
+        $('#userPA').html(userData.stat.pa);
+        $('#userExp').html(userData.stat.exp);
+        checkUnlockStat();
+        checkUnlockBtn();
+        unlockField(0);
+      });
+    </script>
     <table>
       <td class="va-top" width="40%">
         <table id="userData">
