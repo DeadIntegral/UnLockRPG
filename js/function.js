@@ -171,7 +171,8 @@ var userAtk = function(emyNum){
 	e.nhp-=tdmg;
 	$('#eHp').html(e.nhp+' / '+e.hp);
 	if(e.nhp<=0){
-		var output = 'Win! Kill '+e.name+'! Exp+'+e.exp;
+		var output = 'Win! Kill '+e.name+'!';
+		if(typeof e.exp != 'undefined'){output+=' Exp+'+e.exp;}
 		if(typeof u.gold != 'undefined' && typeof e.gold != 'undefined'){output+=' Gold+'+e.gold;}
 		if(e.honor >0){output+='honor+'+e.honor;}
 		printMsg(output);
@@ -183,9 +184,9 @@ var userAtk = function(emyNum){
 			userData.hunt[e.unlock]=1; printEnemyList(userData.status.thisPlace);
 			printMsg('<span class="blue">'+enemyData[e.unlock].name+' 발견!</span>');
 		}
-		if(typeof e.unlockField != 'undefined' && typeof userData.hunt[e.unlock] == 'undefined'){
+		if(typeof e.unlockField != 'undefined' && typeof userData.field[e.unlockField] == 'undefined'){
 			userData.field[e.unlockField]=1; unlockField(e.unlockField);
-			printMsg('<span class="yellow">'+fieldData[e.unlockField].name+' 발견!</span>');
+			printMsg('<span class="blue">'+field[e.unlockField].name+' 발견!</span>');
 		}
 		$('#userHP').html(userData.stat.hp);
 		$('#battlePlace').html('');
