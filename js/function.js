@@ -1,10 +1,7 @@
-var test = function(){
-  return 0;
-}
 var checkUnlockStat = function(){
-  var num = userData.unlock.stat;
-  var output = checkUnlockFunc(num,'stat');
-  $('#unlockStat').html(output);
+	var num = userData.unlock.stat;
+	var output = checkUnlockFunc(num,'stat');
+	$('#unlockStat').html(output);
 };
 var checkUnlockBtn = function(){
 	var num = userData.unlock.statBtn;
