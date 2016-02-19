@@ -478,7 +478,7 @@ var enemyData = {
 		eea:4000,
 		pd:2000,
 		md:2000,
-		eed:1500
+		eed:1500,
 		exp:550,
 		unlock:66
 	},
