@@ -1,6 +1,6 @@
 # UnLockRPG
 
+work:
 save fearue
- - import, export
- - cookie
+ - import, export (maybe atob, btoa)
 language pack
