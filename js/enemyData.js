@@ -409,7 +409,7 @@ var enemyData = {
 	57:{
 		name:'호루스',
 		title:'[수호의 신]',
-		type:'boss'
+		type:'boss',
 		hp:170000,
 		pa:2200,
 		ma:3400,
