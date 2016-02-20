@@ -217,13 +217,17 @@ var enemyAtk = function(){
 	$('#userHP').html(u.nhp+' / '+u.hp);
 };
 var statRefresh = function(){
-	var list = ['hp','mp','pa','pd','ma','md','efa','efd','eia','eid','eea','eed','exp','gold','honor','fame'];
-	for(var i=0; i<list.length; i++){
+	var list = ['hp','mp','pa','pd','ma','md','efa','efd','eia','eid','eea','eed'];
+	for(var i=0; i<12; i++){
 		if(typeof userData.stat[list[i]] != 'undefined'){
 			$('#user'+list[i].toUpperCase()).html(userData.stat[list[i]]);
 		}
 	}
 	if(userData.unlock.statBtn>0){ statBtnRefresh(); }
+	var list2 = ['exp','gold','honor','fame'];
+	for(var i=0; i<4; i++){
+		if(typeof userData.stat[list2[i]] != 'undefined'){$('#user'+list2[i].charAt(0).toUpperCase() + list2[i].slice(1)).html(userData.stat[list2[i]]);}
+	}
 };
 var battleEnd = function(){
 	userData.status.battle=0;
