@@ -1,76 +1,130 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="euc-kr">
-    <script src="./js/jquery-1.11.3.min.js"></script>
-    <script src="./js/userData.js"></script>
-    <script src="./js/enemyData.js"></script>
-    <script src="./js/fieldData.js"></script>
-    <script src="./js/upgrade.js"></script>
-    <script src="./js/function.js"></script>
-    <link rel="stylesheet" href="./css/common.css">
-  </head>
-  <body>
-    <script>
-      var msg = [];
-      (function(){
-        
-      }());
-      $(document).ready(function(){
-        $('#userHP').html(userData.stat.hp);
-        $('#userPA').html(userData.stat.pa);
-        $('#userExp').html(userData.stat.exp);
-        checkUnlockStat();
-        checkUnlockBtn();
-        unlockField(0);
-      });
-    </script>
-    <table>
-      <td class="va-top" width="40%">
-        <table id="userData">
-          <tr><td colspan="3">Name</td></tr>
-          <tr id="uStat10"><td title="Health Point">HP</td><td id="userHP"></td><td id="uHPUp"></td></tr>
-          <tr id="uStat20"><td title="Physical Attack">PA</td><td id="userPA"></td><td id="uPAUp"></td></tr>
-          <tr id="uStat30"></tr><tr id="uStat40"></tr><tr id="uStat50"></tr><tr id="uStat60"></tr>
-          <tr id="uStat70"><td>Exp</td><td id="userExp"></td><td></td></tr>
-          <tr id="uStat80"><td></td><td id="genExp" align="center"></td><td></td><td></td><td id="genGold" align="center"></td><td></td></tr>
-          <tr id="uStat90"></tr>
-        </table>
-        
-        <table>
-          <tr>
-            <th>Unlock</th><th>CostExp</th><th>CostGold</th><th></th>
-          </tr>
-          <tr id="unlockStat"></tr>
-          <tr id="unlockStatBtn"></tr>
-          <tr id="unlockIdle"></tr>
-        </table>
-      </td>
-      
-      <td width="30%" class="va-top">
-        <table>
-          <tr>
-            <td id="battlePlace" align="center"  class="s-shadow"></td>
-          </tr>
-        </table>
-      </td>
-      
-      <td class="va-top">
-        <table>
-          <tr>
-            <td><div  id="fieldPlace"></div></td>
-          </tr>
-          <tr>
-            <td><div id="fieldMonList"></div></td>
-          </tr>
-        </table>
-        
-        <table>
-          <tr>
-            <td id="msgPlace"></td>
-          </tr>
-        </table>
-      </td>
-    </table>
-  </body>
+<head>
+<!-- <script src="https://code.jquery.com/jquery-1.11.3.js"></script> -->
+<script src="./js/jquery-1.11.3.min.js"></script>
+<script src="./js/userData.js"></script>
+<script src="./js/enemyData.js"></script>
+<script src="./js/fieldData.js"></script>
+<script src="./js/upgrade.js"></script>
+<script src="./js/function.js"></script>
+<script src="./js/lz-string.min.js"></script>
+<link rel="stylesheet" href="./css/common.css">
+<meta charset="euc-kr">
+</head>
+<body>
+<script>
+var msg = [];
+(function(){
+	setInterval(function(){autoMake();},1000);
+}());
+$(document).ready(function(){
+	checkStat();
+	checkExtraStat();
+	$('#userHP').html(userData.stat.hp);
+	$('#userPA').html(userData.stat.pa);
+	$('#userExp').html(userData.stat.exp);
+	checkUnlock('stat');
+	checkUnlock('statBtn');
+	unlockField(0);
+	
+	$('[id*=Window]').css('display','none');
+	$('#mainWindow').css('display','block');
+});
+
+</script>
+<div id="menu">
+	<div id="main" class="menuTab select clickAble" onclick="moveMenu(this)">Main</div>
+	<div id="config" class="menuTab clickAble" onclick="moveMenu(this)">Config</div>
+</div>
+<div id="mainWindow">
+<table>
+	<tr>
+		<td class="va-top" width="40%">
+			<!--
+			<table id="userData">
+				<tr><td colspan="2">Name</td></tr>
+				<tr id="uStat10"><td title="Health Point">HP</td><td><span id="userHP"></span><span id="uHPUp"></span></td></tr>
+				<tr id="uStat20"><td title="Physical Attack">PA</td><td><span id="userPA"></span><span id="uPAUp"></span></td></tr>
+				<tr id="uStat30"></tr><tr id="uStat40"></tr><tr id="uStat50"></tr><tr id="uStat60"></tr>
+				<tr id="uStat70"><td>Exp</td><td id="userExp"></td></tr>
+				<tr id="uStat80"><td></td><td id="genExp" align="center"></td><td></td><td id="genGold" align="center"></td></tr>
+				<tr id="uStat90"></tr>
+			</table>
+			-->
+			<div id="userData">
+				<div id="uName">Name</div>
+				<div id="uStat"></div>
+				<div id="uEStat"></div>
+			</div>
+			<table>
+				<tr>
+					<th>Unlock</th><th>CostExp</th><th>CostGold</th><th></th>
+				</tr>
+				<tr id="unlockStat"></tr>
+				<tr id="unlockEStat"></tr>
+				<tr id="unlockStatBtn"></tr>
+				<tr id="unlockIdle"></tr>
+			</table>
+		</td>
+		
+		<td width="30%" class="va-top">
+			<table>
+				<tr>
+					<td><div id="battlePlace" align="center"  class="s-shadow"></div></td>
+				</tr>
+			</table>
+			
+			
+		</td>
+		<td class="va-top">
+			<table>
+				<tr>
+					<td><div  id="fieldPlace"></div></td>
+				</tr>
+				<tr>
+					<td><div id="fieldMonList"></div></td>
+				</tr>
+			</table>
+			<table>
+				<tr>
+					<td id="msgPlace"></td>
+				</tr>
+			</table>
+		</td>
+	</tr>
+</table>
+</div>
+
+<div id="bagWindow">
+bag window<br>
+next update
+</div>
+
+<div id="skillWindow">
+skill window<br>
+next update
+</div>
+
+<div id="shopWindow">
+shop window<br>
+next update
+</div>
+
+<div id="buildWindow">
+	<table >
+		<th>Name</th><th>costGold</th><th>needHonor</th><th>needFame</th><th></th>
+	</table>
+</div>
+
+<div id="configWindow">
+	<div id="configPlace">
+		<button onClick="saveOut()">export</button>
+		<button onClick="saveIn()">import</button>
+		<textarea id="saveCode" rows="10" cols="100"></textarea>
+		<br><span id="saveMsg"></span>
+	</div>
+</div>
+
+</body>
 </html>
