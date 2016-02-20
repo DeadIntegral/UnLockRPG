@@ -1,17 +1,15 @@
-var checkUnlockStat = function(){
-	var num = userData.unlock.stat;
-	var output = checkUnlockFunc(num,'stat');
-	$('#unlockStat').html(output);
-};
-var checkUnlockBtn = function(){
-	var num = userData.unlock.statBtn;
-	var output = checkUnlockFunc(num,'statBtn');
-	$('#unlockStatBtn').html(output);
-};
-var checkUnlockIdle = function(){
-	var num = userData.unlock.idle;
-	var output = checkUnlockFunc(num,'idle');
-	$('#unlockIdle').html(output);
+var moveMenu = function(str){
+	$('.menuTab').removeClass('select');
+	$(str).addClass('select');
+	$('[id*=Window]').css('display','none');
+	$('#'+str.id+'Window').css('display','block');
+}
+
+var checkUnlock = function(name){
+	var num = userData.unlock[name];
+	var output = checkUnlockFunc(num,name);
+	var newName = name.charAt(0).toUpperCase() + name.slice(1);
+	$('#unlock'+newName).html(output);
 }
 var checkUnlockFunc = function(num,name){
 	var obj = upgrade.lock[name][num];
@@ -31,25 +29,21 @@ var unlcokFunc = function(arg){
 		}else{
 			if(obj.costExp<=userData.stat.exp){
 				userData.stat.exp -= obj.costExp;
-				if(obj.otherUnlock == 'gold'){
-					var output = '<td title="">'+obj.target+'</td><td id="user'+obj.target+'"></td><td></td>';
-					checkUnlockIdle();
-					userData.stat.gold=0;
-				}else if(obj.target == 'HO'){
-					var output = '<td title="">Honor</td><td id="user'+obj.target+'"></td><td></td>'; userData.stat.honor=0;
-				}else if(obj.target == 'FA'){
-					var output = '<td title="">Fame</td><td id="user'+obj.target+'"></td><td></td>'; userData.stat.fame=0;
-				}else{
-					var output = '<td title="">'+obj.target+'</td><td id="user'+obj.target+'"></td><td id="u'+obj.target+'Up"></td>';
-					var statName = obj.target.toLowerCase();
-					userData.stat[statName]=5;
-				}
-				$('#uStat'+obj.place).append(output);
-				
+				if(obj.otherUnlock == 'eStat'){ checkUnlock('eStat'); }
+				userData.stat[obj.target]=5;
 				userData.unlock.stat+=1;
-				checkUnlockStat();
+				checkStat();
 			}else{ printMsg('Not Enough Exp'); }
 		}
+	}else if(arg=='eStat'){
+		var obj = upgrade.lock.eStat[userData.unlock.eStat];
+		if(obj.costExp<=userData.stat.exp){
+			if(obj.otherUnlock == 'idle'){ checkUnlock('idle'); }
+			userData.stat.exp -= obj.costExp;
+			userData.stat[obj.target]=0;
+			userData.unlock.eStat+=1;
+			checkExtraStat();
+		}else{ printMsg('Not Enough Exp'); }
 	}else if(arg=='statBtn'){
 		var obj = upgrade.lock.statBtn[userData.unlock.statBtn];
 		if(typeof obj=='undefined'){
@@ -57,7 +51,6 @@ var unlcokFunc = function(arg){
 			if(obj.costExp<=userData.stat.exp){
 				userData.stat.exp -= obj.costExp;
 				userData.unlock.statBtn+=1;
-				checkUnlockBtn();
 				statBtnRefresh();
 			}else{printMsg('Not Enough Exp');}
 		}
@@ -69,32 +62,36 @@ var unlcokFunc = function(arg){
 				if(typeof obj.costGold != 'undefined'){userData.stat.gold -= obj.costGold;}
 				var exp = (typeof obj.addExp != 'undefined')?obj.addExp:0;
 				var gold = (typeof obj.addGold != 'undefined')?obj.addGold:0;
-				addAutoMake(exp,gold);
 				userData.unlock.idle+=1;
-				if(userData.unlock.idle==1){
-					setInterval(function(){autoMake();},1000);
-				}
-				checkUnlockIdle();
+				userData.idle.exp+=exp; userData.idle.gold+=gold;
+				checkExtraStat();
 				statBtnRefresh();
 			}else{printMsg('Not Enough Gold');}
 		}else{printMsg('Not Enough Exp');}
+	}else if(arg=='menu'){
+		var obj = upgrade.lock.menu[userData.unlock.menu];
+		if(obj.costExp<=userData.stat.exp){
+			userData.stat.exp -= obj.costExp;
+			checkMenu();
+		}else{printMsg('Not Enough Exp');}
 	}
+	checkUnlock(arg);
 	statRefresh();
 };
 
 var unlockField = function(fieldNum){
 	var output = '<button class="fSize1 btn" onclick="printEnemyList('+fieldNum+')">'+field[fieldNum].name+'</button>';
+	userData.hunt[field[fieldNum].armyList[0]]=0;
 	$('#fieldPlace').append(output);
-/*
-	if(typeof UserData.Bag != 'undefined'){
-		for(var key in UserData.Bag){
-			if(!UserData.Bag.hasOwnProperty(key)) continue;
-			output+= '<button class="fieldsize1 btn item" code="'+key+'">'+itemData[key].name+'</button>';
-		}
-		$("#bag").html(output);
-	}
-*/
 };
+var checkField = function(){
+	var output='';
+	for(var key in userData.field){
+		if(!userData.field.hasOwnProperty(key)) continue;
+		output += '<button class="fSize1 btn" onclick="printEnemyList('+key+')">'+field[key].name+'</button>';
+	}
+	$('#fieldPlace').html(output);
+}
 var printEnemyList = function(Num){
 	userData.status.thisPlace=Num;
 	var output='';
@@ -102,7 +99,9 @@ var printEnemyList = function(Num){
 		if(typeof userData.hunt[field[Num].armyList[i]] != 'undefined'){
 			var eNum = field[Num].armyList[i];
 			//type == boss => bgcolor change
-			output += '<button class="fSize1 btn" onclick="statBattle('+eNum+')">'+enemyData[eNum].name+'<br>HP:'+enemyData[eNum].hp+'</button>';
+			var color='';
+			if(userData.hunt[eNum]==1){color=' bg-g';}
+			output += '<button class="fSize1 btn'+color+'" onclick="statBattle('+eNum+')">'+enemyData[eNum].name+'<br>HP:'+enemyData[eNum].hp+'</button>';
 		}
 	}
 	$('#fieldMonList').html(output);
@@ -113,20 +112,19 @@ var u = {};
 var statBattle = function(emyNum){
 	if(userData.status.battle == 0){
 		userData.status.battle=1;
-		//e = enemyData[emyNum];
 		
 		for(var key in enemyData[emyNum]){
 			if(!enemyData[emyNum].hasOwnProperty(key)) continue;
 			e[key]=enemyData[emyNum][key];
 			
 		}
-		u = userData.stat;
+		u = userData.stat; //링크만 걸림 나중에 수정하기
 		var output = '';
 		if(typeof e.title != 'undefined'){output+=e.title;}
 		output+=e.name+'<br>몹 이미지 넣을 공간<br>';
 		output+='<div id="eHp">'+e.hp+' / '+e.hp+'</div>'; //fix01
 		output+='<button onclick="userAtk('+emyNum+')">Attack</button><br><br>';
-		output+='<button onclick="">Away</button>';
+		output+='<button onclick="battleEnd()">Away</button>';
 		output+='<table><tr>';
 		if(typeof e.pa != 'undefined'){output += '<td>PA</td><td>'+e.pa+'</td>';}
 		if(typeof e.pd != 'undefined'){output += '<td>PD</td><td>'+e.pd+'</td>';}
@@ -158,70 +156,42 @@ var readyStat = function(o){
 	o.eid=(typeof o.eid != 'undefined')?o.eid:0;
 	o.eea=(typeof o.eea != 'undefined')?o.eea:0;
 	o.eed=(typeof o.eed != 'undefined')?o.eed:0;
-	//o.gold = (typeof o.gold != 'undefined')?o.gold:0;
 	return o;
 };
 
 var userAtk = function(emyNum){
 	var tdmg=0;
 	var pdmg = u.pa-e.pd;
-	//var mdmg = u.ma-e.md;
 	var mdmg = (u.ma>0)?(u.ma-e.md):0;
 	var efdmg = u.efa-e.efd;
 	var eidmg = u.eia-e.eid;
 	var eedmg = u.eea-e.eed;
 	if(pdmg>=0){tdmg+=pdmg;} if(mdmg>=0){tdmg+=mdmg;} if(efdmg>=0){tdmg+=efdmg;} if(eidmg>=0){tdmg+=eidmg;} if(eedmg>=0){tdmg+=eedmg;}
-	//언락 후 양수일 경우 데미지도 뜨도록
 	e.nhp-=tdmg;
 	$('#eHp').html(e.nhp+' / '+e.hp);
 	if(e.nhp<=0){
-		userData.status.battle=0;
-		
 		var output = 'Win! Kill '+e.name+'!';
+		userData.hunt[emyNum]=1; //잡은 몹
 		
 		var list = ['exp','gold','honor','fame']; var list2 = ['Exp','Gold','Honor','Fame'];
 		for(var i=0; i<4; i++){
-			if(typeof e[list[i]] != 'undefined' && typeof e[list[i]] != 'undefined'){
+			if(typeof e[list[i]] != 'undefined' && userData.unlock.eStat>=i){
 				output+=' '+list2[i]+'+'+e[list[i]];
 				userData.stat[list[i]]+=e[list[i]];
 				$('#user'+list2[i]).html(userData.stat[list[i]]);
 			}
 		}
-		/*
-		if(typeof e.exp != 'undefined'){
-			output+=' Exp+'+e.exp;
-			userData.stat.exp+=e.exp;
-			$('#userExp').html(userData.stat.exp);
-		}
-		if(typeof u.gold != 'undefined' && typeof e.gold != 'undefined'){
-			output+=' Gold+'+e.gold;
-			userData.stat.gold+=e.gold;
-			$('#userGold').html(userData.stat.gold);
-		}
-		if(typeof u.honor != 'undefined' && typeof e.honor != 'undefined'){
-			output+=' honor+'+e.honor;
-			userData.stat.honor+=e.honor;
-			$('#userHonor').html(userData.stat.honor);
-		}
-		if(typeof u.fame != 'undefined' && typeof e.fame != 'undefined'){
-			output+=' honor+'+e.fame;
-			userData.stat.fame+=e.fame;
-			$('#userFame').html(userData.stat.fame);
-		}
-		*/
 		printMsg(output);
 		
 		if(typeof e.unlock != 'undefined' && typeof userData.hunt[e.unlock] == 'undefined'){
-			userData.hunt[e.unlock]=1; printEnemyList(userData.status.thisPlace);
+			userData.hunt[e.unlock]=0; printEnemyList(userData.status.thisPlace);
 			printMsg('<span class="blue">'+enemyData[e.unlock].name+' 발견!</span>');
 		}
 		if(typeof e.unlockField != 'undefined' && typeof userData.field[e.unlockField] == 'undefined'){
 			userData.field[e.unlockField]=1; unlockField(e.unlockField);
 			printMsg('<span class="blue">'+field[e.unlockField].name+' 발견!</span>');
 		}
-		$('#userHP').html(userData.stat.hp);
-		$('#battlePlace').html('');
-		e={};
+		battleEnd();
 	}else{
 		enemyTurn();
 	}
@@ -231,11 +201,8 @@ var enemyTurn = function(){
 	enemyAtk();
 	
 	if(u.nhp<=0){
-		userData.status.battle=0;
-		$('#userHP').html(userData.stat.hp);
-		$('#battlePlace').html('');
 		printMsg('<span class="red">Defeated by '+e.name+'</span>');
-		e={};
+		battleEnd();
 	}
 };
 var enemyAtk = function(){
@@ -250,21 +217,20 @@ var enemyAtk = function(){
 	$('#userHP').html(u.nhp+' / '+u.hp);
 };
 var statRefresh = function(){
-	var list = ['hp','mp','pa','pd','ma','md','efa','efd','eia','eid','eea','eed'];
+	var list = ['hp','mp','pa','pd','ma','md','efa','efd','eia','eid','eea','eed','exp','gold','honor','fame'];
 	for(var i=0; i<list.length; i++){
 		if(typeof userData.stat[list[i]] != 'undefined'){
 			$('#user'+list[i].toUpperCase()).html(userData.stat[list[i]]);
 		}
 	}
-	/*
-	if(typeof userData.stat.hp != 'undefined'){$('#userHP').html(userData.stat.hp);}
-	*/
-	$('#userExp').html(userData.stat.exp);
-	$('#userGold').html(userData.stat.gold);
-	
 	if(userData.unlock.statBtn>0){ statBtnRefresh(); }
 };
-
+var battleEnd = function(){
+	userData.status.battle=0;
+	$('#userHP').html(userData.stat.hp);
+	$('#battlePlace').html('');
+	e={};
+}
 var statBtnRefresh = function(){
 	var list1 = ['hp','mp','pa','pd','ma','md']; var list2 = ['efa','efd','eia','eid','eea','eed'];
 	for(var i=0; i<list1.length; i++){
@@ -286,7 +252,7 @@ var addStat = function(arg){
 	}else{addStatModul(arg,1);}
 };
 var addStatModul = function(arg,num){
-	if(arg=='hp' || arg=='ma'){
+	if(arg=='hp' || arg=='mp'){
 		if(userData.stat.exp>=num*5){
 			userData.stat.exp-=num*5;
 			userData.stat[arg]+=num*10;
@@ -318,15 +284,88 @@ var printMsg = function(output){
 	}
 	for(var i=0; i<10; i++){if(typeof msg[i] != 'undefined') $('#msgPlace').append(msg[i]+'<br>');}
 }
-var addAutoMake = function(exp,gold){
-	if(exp>0){userData.idle.exp+=exp; $('#genExp').html(userData.idle.exp+' Exp/s');}
-	if(gold>0){userData.idle.gold+=gold; $('#genGold').html(userData.idle.gold+' Gold/s');}
-}
 var autoMake = function(){
 	userData.stat.exp+=userData.idle.exp;
 	userData.stat.gold+=userData.idle.gold;
 	$('#userExp').html(userData.stat.exp);
 	$('#userGold').html(userData.stat.gold);
+}
+
+var saveOut = function(){
+	if(userData.status.battle==0){
+		var string = JSON.stringify(userData);
+		var encode = LZString.compressToBase64(string);
+		$('#saveCode').val(encode);
+		$('#saveCode').select();
+	}else{
+		$('#saveMsg').html('save error! You have to finish the battle!');
+	}
+}
+var saveIn = function(){
+	var encode = $('#saveCode').val();
+	var decode = LZString.decompressFromBase64(encode);
+	var revived = JSON.parse(decode);
+	userData=revived;
+	checkUnlock('stat');
+	checkUnlock('statBtn');
+	checkUnlock('idle');
+	checkUnlock('eStat');
+	checkStat();
+	checkExtraStat();
+	statBtnRefresh();
+	
+	var list = ['exp','gold','honor','fame']; var list2 = ['Exp','Gold','Honor','Fame'];
+	for(var i=0; i<4; i++){
+		if(typeof e[list[i]] != 'undefined' && typeof e[list[i]] != 'undefined'){
+			$('#user'+list2[i]).html(userData.stat[list[i]]);
+		}
+	}
+	checkField();
+	$('#fieldMonList').html('');
+	$('#saveMsg').html('import save');
+}
+
+var checkStat = function(){
+	var list = ['hp','mp','pa','pd','ma','md','efa','efd','eia','eid','eea','eed'];
+	var output = '';
+	var s = userData.stat;
+	for(var i=0; i<list.length; i++){
+		if(i % 2 == 0){output+='<div>';}
+		if(s[list[i]] === parseInt(s[list[i]], 10) && s[list[i]] != 0){
+			var sUpper = list[i].toUpperCase();
+			output += '<div class="sName">'+sUpper+'</div><div class="sVal"><span id="user'+sUpper+'">'+s[list[i]]+'</span><span id="u'+sUpper+'Up"></span></div>';
+		}
+		if(i % 2 == 1){output+='</div>';}
+	}
+	$('#uStat').html(output);
+}
+var checkExtraStat = function(){
+	var output='<div><div class="sName">Exp</div><div class="sVal"><span id="userExp">'+userData.stat.exp+'</span></div>';
+	var ch2 = userData.unlock;
+	var check = userData.stat.gold;
+	if(check === parseInt(check, 10) && ch2.eStat>0 ){ output+='<div class="sName">Gold</div><div class="sVal"><span id="userGold">'+userData.stat.gold+'</span></div>';}
+	output += '</div><div>';
+	check=userData.idle.exp;
+	if(check === parseInt(check, 10) && ch2.idle>0){output+='<div class="sName">Exp/s</div><div class="sVal"><span id="genExp">'+userData.idle.exp+'</span></div>';}
+	check=userData.idle.gold;
+	if(check === parseInt(check, 10) && ch2.idle>0){output+='<div class="sName">Gold/s</div><div class="sVal"><span id="genGold">'+userData.idle.gold+'</span></div>';}
+	output += '</div><div>';
+	check=userData.idle.honor;
+	if(check === parseInt(check, 10) && ch2.eStat>=2){output+='<div class="sName">Honor</div><div class="sVal"><span id="userHonor">'+userData.stat.honor+'</span></div>';}
+	check=userData.idle.fame;
+	if(check === parseInt(check, 10) && ch2.eStat>=3){output+='<div class="sName">Fame</div><div class="sVal"><span id="userFame">'+userData.stat.fame+'</span></div>';}
+	output += '</div>';
+	$('#uEStat').html(output);
+}
+var checkMenu = function(){
+	var output = '<div id="main" class="menuTab select clickAble" onclick="moveMenu(this)">Main</div><div id="config" class="menuTab clickAble" onclick="moveMenu(this)">Config</div>';
+	$('#menu').html(output);
+	if(typeof userData.unlock.menu != 'undefined'){
+		if(userData.unlock.menu>0){ var output = '<div id="build" class="menuTab clickAble" onclick="moveMenu(this)">Build</div>'; $('#menu').children(':eq(0)').after(output); }
+		if(userData.unlock.menu>1){ var output = '<div id="skill" class="menuTab clickAble" onclick="moveMenu(this)">Skill</div>'; $('#menu').children(':eq(0)').after(output); }
+		if(userData.unlock.menu>2){ var output = '<div id="bag" class="menuTab clickAble" onclick="moveMenu(this)">Bag</div>'; $('#menu').children(':eq(0)').after(output); }
+		if(userData.unlock.menu>3){ var output = '<div id="shop" class="menuTab clickAble" onclick="moveMenu(this)">Shop</div>'; $('#menu').children(':eq(2)').after(output); }
+	}
 }
 /*
 자동생산, 스킬, 장비
