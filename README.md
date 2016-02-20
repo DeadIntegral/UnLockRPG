@@ -1,6 +1,7 @@
 # UnLockRPG
 
 work:
-save fearue
- - import, export (maybe atob, btoa)
-language pack
+ buildData upload,
+ skillData upload,
+ function.js update,
+ language pack
