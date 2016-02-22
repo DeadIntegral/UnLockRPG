@@ -18,5 +18,6 @@ var userData = {
 	hunt:{},
 	killBoss:{},
 	status:{battle:0},
-	idle:{exp:0, gold:0}
+	idle:{exp:0, gold:0},
+	build:{},
 };
