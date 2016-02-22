@@ -361,6 +361,7 @@ var checkBuild = function(){
 	var list = ['farm','cityH','trainH'];
 	var output=''
 	for(var i=0; i<3; i++){
+		if(typeof userData.build == 'undefined'){userData.build={};}
 		if(typeof userData.build[list[i]] == 'undefined'){userData.build[list[i]]=0;}
 		var obj = build[list[i]][userData.build[list[i]]];
 		if(typeof obj.costGold == 'undefined'){obj.costGold=0;}
