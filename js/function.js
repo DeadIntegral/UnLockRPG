@@ -23,56 +23,44 @@ var checkUnlockFunc = function(num,name){
 	return output;
 }
 var unlcokFunc = function(arg){
-	if(arg=='stat'){
-		var obj = upgrade.lock.stat[userData.unlock.stat];
-		if(typeof obj=='undefined'){
-		}else{
-			if(obj.costExp<=userData.stat.exp){
+	var obj = upgrade.lock[arg][userData.unlock[arg]];
+	if(typeof obj=='undefined'){
+		//input value 0
+	}else{
+		if(obj.costExp<=userData.stat.exp){
+			if(arg=='stat'){
 				userData.stat.exp -= obj.costExp;
-				if(obj.otherUnlock == 'eStat'){ checkUnlock('eStat'); }
+				if(typeof obj.otherUnlock != 'undefined'){checkUnlock(obj.otherUnlock);}
 				userData.stat[obj.target]=5;
 				userData.unlock.stat+=1;
 				checkStat();
-			}else{ printMsg('Not Enough Exp'); }
-		}
-	}else if(arg=='eStat'){
-		var obj = upgrade.lock.eStat[userData.unlock.eStat];
-		if(obj.costExp<=userData.stat.exp){
-			if(obj.otherUnlock == 'idle'){ checkUnlock('idle'); }
-			userData.stat.exp -= obj.costExp;
-			userData.stat[obj.target]=0;
-			userData.unlock.eStat+=1;
-			checkExtraStat();
-		}else{ printMsg('Not Enough Exp'); }
-	}else if(arg=='statBtn'){
-		var obj = upgrade.lock.statBtn[userData.unlock.statBtn];
-		if(typeof obj=='undefined'){
-		}else{
-			if(obj.costExp<=userData.stat.exp){
+			}else if(arg=='eStat'){
+				if(obj.otherUnlock == 'idle'){ checkUnlock('idle'); }
+				userData.stat.exp -= obj.costExp;
+				userData.stat[obj.target]=0;
+				userData.unlock.eStat+=1;
+				checkExtraStat();
+			}else if(arg=='statBtn'){
 				userData.stat.exp -= obj.costExp;
 				userData.unlock.statBtn+=1;
 				statBtnRefresh();
-			}else{printMsg('Not Enough Exp');}
-		}
-	}else if(arg=='idle'){
-		var obj = upgrade.lock.idle[userData.unlock.idle];
-		if(obj.costExp<=userData.stat.exp){
-			if(obj.costGold<=userData.stat.gold){
-				if(typeof obj.costExp != 'undefined'){userData.stat.exp -= obj.costExp;}
-				if(typeof obj.costGold != 'undefined'){userData.stat.gold -= obj.costGold;}
-				var exp = (typeof obj.addExp != 'undefined')?obj.addExp:0;
-				var gold = (typeof obj.addGold != 'undefined')?obj.addGold:0;
-				userData.unlock.idle+=1;
-				userData.idle.exp+=exp; userData.idle.gold+=gold;
-				checkExtraStat();
-				statBtnRefresh();
-			}else{printMsg('Not Enough Gold');}
-		}else{printMsg('Not Enough Exp');}
-	}else if(arg=='menu'){
-		var obj = upgrade.lock.menu[userData.unlock.menu];
-		if(obj.costExp<=userData.stat.exp){
-			userData.stat.exp -= obj.costExp;
-			checkMenu();
+			}else if(arg=='idle'){
+				if(obj.costGold<=userData.stat.gold){
+					if(typeof obj.costExp != 'undefined'){userData.stat.exp -= obj.costExp;}
+					if(typeof obj.costGold != 'undefined'){userData.stat.gold -= obj.costGold;}
+					var exp = (typeof obj.addExp != 'undefined')?obj.addExp:0;
+					var gold = (typeof obj.addGold != 'undefined')?obj.addGold:0;
+					userData.unlock.idle+=1;
+					userData.idle.exp+=exp; userData.idle.gold+=gold;
+					checkExtraStat();
+					statBtnRefresh();
+				}else{printMsg('Not Enough Gold');}
+			}else if(arg=='menu'){
+				userData.stat.exp -= obj.costExp;
+				userData.unlock.menu+=1;
+				if(userData.unlock.menu==1){checkBuild();}
+				checkMenu();
+			}
 		}else{printMsg('Not Enough Exp');}
 	}
 	checkUnlock(arg);
@@ -276,6 +264,8 @@ var addStatModul = function(arg,num){
 		}else{printMsg('Not Enough Exp');}
 	}
 };
+
+
 var printMsg = function(output){
 	$('#msgPlace').html('');
 	if(msg.length==10){
@@ -316,14 +306,10 @@ var saveIn = function(){
 	checkUnlock('eStat');
 	checkStat();
 	checkExtraStat();
+	checkMenu();
+	checkBuild();
 	statBtnRefresh();
 	
-	var list = ['exp','gold','honor','fame']; var list2 = ['Exp','Gold','Honor','Fame'];
-	for(var i=0; i<4; i++){
-		if(typeof e[list[i]] != 'undefined' && typeof e[list[i]] != 'undefined'){
-			$('#user'+list2[i]).html(userData.stat[list[i]]);
-		}
-	}
 	checkField();
 	$('#fieldMonList').html('');
 	$('#saveMsg').html('import save');
@@ -354,9 +340,9 @@ var checkExtraStat = function(){
 	check=userData.idle.gold;
 	if(check === parseInt(check, 10) && ch2.idle>0){output+='<div class="sName">Gold/s</div><div class="sVal"><span id="genGold">'+userData.idle.gold+'</span></div>';}
 	output += '</div><div>';
-	check=userData.idle.honor;
+	check=userData.stat.honor;
 	if(check === parseInt(check, 10) && ch2.eStat>=2){output+='<div class="sName">Honor</div><div class="sVal"><span id="userHonor">'+userData.stat.honor+'</span></div>';}
-	check=userData.idle.fame;
+	check=userData.stat.fame;
 	if(check === parseInt(check, 10) && ch2.eStat>=3){output+='<div class="sName">Fame</div><div class="sVal"><span id="userFame">'+userData.stat.fame+'</span></div>';}
 	output += '</div>';
 	$('#uEStat').html(output);
@@ -371,6 +357,46 @@ var checkMenu = function(){
 		if(userData.unlock.menu>3){ var output = '<div id="shop" class="menuTab clickAble" onclick="moveMenu(this)">Shop</div>'; $('#menu').children(':eq(2)').after(output); }
 	}
 }
+var checkBuild = function(){
+	var list = ['farm','cityH','trainH'];
+	var output=''
+	for(var i=0; i<3; i++){
+		if(typeof userData.build[list[i]] == 'undefined'){userData.build[list[i]]=0;}
+		var obj = build[list[i]][userData.build[list[i]]];
+		if(typeof obj.costGold == 'undefined'){obj.costGold=0;}
+		if(typeof obj.needHonor == 'undefined'){obj.needHonor=0;}
+		if(typeof obj.needFame == 'undefined'){obj.needFame=0;}
+		output += '<tr><td>'+obj.name+'</td><td>'+obj.costGold+'</td><td>'+obj.needHonor+'</td><td>'+obj.needFame+'</td><td><button onClick="addbuilt(\''+list[i]+'\')">Built</button></td></tr>';
+	}
+	$('#buildPlace').html(output);
+}
+var addbuilt = function(arg){
+	var obj = build[arg][userData.build[arg]];
+	if(typeof obj.costExp == 'undefined'){obj.costExp=0;}
+	if(typeof obj.costGold == 'undefined'){obj.costGold=0;}
+	
+	if(userData.stat.exp>obj.costExp){
+		if(userData.stat.gold>obj.costGold){
+			userData.stat.exp-=obj.costExp;
+			userData.stat.gold-=obj.costGold;
+			
+			if(arg == 'farm'){
+				if(typeof obj.addExp == 'undefined'){obj.addExp=0;}
+				if(typeof obj.addGold == 'undefined'){obj.addGold=0;}
+				userData.idle.exp+=obj.addExp;
+				userData.idle.gold+=obj.addGold;
+				userData.build[arg]+=1;
+			}else if(arg == 'cityH'){
+			}else if(arg == 'trainH'){
+			}else{
+				printMsg('Error!');
+			}
+		}else{printMsg('Not Enough Gold');}
+	}else{printMsg('Not Enough Exp');}
+	checkBuild();
+}
 /*
+몹 사냥시에 색 변하기
+design 업글하면 icon추가해주기 - checkstat 반복문 내 ouput에 링크걸기
 자동생산, 스킬, 장비
 */
