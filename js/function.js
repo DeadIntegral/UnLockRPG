@@ -28,9 +28,9 @@ var unlcokFunc = function(arg){
 		//input value 0
 	}else{
 		if(obj.costExp<=userData.stat.exp){
+			if(typeof obj.otherUnlock != 'undefined'){checkUnlock(obj.otherUnlock);}
 			if(arg=='stat'){
 				userData.stat.exp -= obj.costExp;
-				if(typeof obj.otherUnlock != 'undefined'){checkUnlock(obj.otherUnlock);}
 				userData.stat[obj.target]=5;
 				userData.unlock.stat+=1;
 				checkStat();
@@ -89,7 +89,10 @@ var printEnemyList = function(Num){
 			//type == boss => bgcolor change
 			var color='';
 			if(userData.hunt[eNum]==1){color=' bg-g';}
-			output += '<button class="fSize1 btn'+color+'" onclick="statBattle('+eNum+')">'+enemyData[eNum].name+'<br>HP:'+enemyData[eNum].hp+'</button>';
+			if(enemyData[eNum].type=='boss'){
+				if(userData.hunt[eNum]==1){color=' bg-y2';} else {color=' bg-y';}
+			}
+			output += '<button class="fSize1 btn'+color+'" onclick="startBattle('+eNum+')">'+enemyData[eNum].name+'<br>HP:'+enemyData[eNum].hp+'</button>';
 		}
 	}
 	$('#fieldMonList').html(output);
@@ -97,7 +100,7 @@ var printEnemyList = function(Num){
 
 var e = {};
 var u = {};
-var statBattle = function(emyNum){
+var startBattle = function(emyNum){
 	if(userData.status.battle == 0){
 		userData.status.battle=1;
 		
@@ -159,14 +162,26 @@ var userAtk = function(emyNum){
 	$('#eHp').html(e.nhp+' / '+e.hp);
 	if(e.nhp<=0){
 		var output = 'Win! Kill '+e.name+'!';
+		//boss reward 1 limit
+		if(e.type == 'boss' && typeof userData.hunt[emyNum]=='undefined'){
+			var list = ['exp','gold','honor','fame']; var list2 = ['Exp','Gold','Honor','Fame'];
+			for(var i=0; i<4; i++){
+				if(typeof e[list[i]] != 'undefined' && userData.unlock.eStat>=i){
+					output+=' '+list2[i]+'+'+e[list[i]];
+					userData.stat[list[i]]+=e[list[i]];
+					$('#user'+list2[i]).html(userData.stat[list[i]]);
+				}
+			}
+		}
 		userData.hunt[emyNum]=1; //잡은 몹
-		
-		var list = ['exp','gold','honor','fame']; var list2 = ['Exp','Gold','Honor','Fame'];
-		for(var i=0; i<4; i++){
-			if(typeof e[list[i]] != 'undefined' && userData.unlock.eStat>=i){
-				output+=' '+list2[i]+'+'+e[list[i]];
-				userData.stat[list[i]]+=e[list[i]];
-				$('#user'+list2[i]).html(userData.stat[list[i]]);
+		if(e.type != 'boss'){
+			var list = ['exp','gold','honor','fame']; var list2 = ['Exp','Gold','Honor','Fame'];
+			for(var i=0; i<4; i++){
+				if(typeof e[list[i]] != 'undefined' && userData.unlock.eStat>=i){
+					output+=' '+list2[i]+'+'+e[list[i]];
+					userData.stat[list[i]]+=e[list[i]];
+					$('#user'+list2[i]).html(userData.stat[list[i]]);
+				}
 			}
 		}
 		printMsg(output);
@@ -179,6 +194,10 @@ var userAtk = function(emyNum){
 			userData.field[e.unlockField]=1; unlockField(e.unlockField);
 			printMsg('<span class="blue">'+field[e.unlockField].name+' 발견!</span>');
 		}
+		
+		if(e.type=='boss'){$('[onClick*="startBattle('+emyNum+')"]').addClass('bg-y2');}
+		else{$('[onClick*="startBattle('+emyNum+')"]').addClass('bg-g');}
+		
 		battleEnd();
 	}else{
 		enemyTurn();
@@ -304,6 +323,7 @@ var saveIn = function(){
 	checkUnlock('statBtn');
 	checkUnlock('idle');
 	checkUnlock('eStat');
+	checkUnlock('menu');
 	checkStat();
 	checkExtraStat();
 	checkMenu();
@@ -364,10 +384,12 @@ var checkBuild = function(){
 		if(typeof userData.build == 'undefined'){userData.build={};}
 		if(typeof userData.build[list[i]] == 'undefined'){userData.build[list[i]]=0;}
 		var obj = build[list[i]][userData.build[list[i]]];
-		if(typeof obj.costGold == 'undefined'){obj.costGold=0;}
-		if(typeof obj.needHonor == 'undefined'){obj.needHonor=0;}
-		if(typeof obj.needFame == 'undefined'){obj.needFame=0;}
-		output += '<tr><td>'+obj.name+'</td><td>'+obj.costGold+'</td><td>'+obj.needHonor+'</td><td>'+obj.needFame+'</td><td><button onClick="addbuilt(\''+list[i]+'\')">Built</button></td></tr>';
+		if(typeof obj != 'undefined'){
+			if(typeof obj.costGold == 'undefined'){obj.costGold=0;}
+			if(typeof obj.needHonor == 'undefined'){obj.needHonor=0;}
+			if(typeof obj.needFame == 'undefined'){obj.needFame=0;}
+			output += '<tr><td>'+obj.name+'</td><td>'+obj.costGold+'</td><td>'+obj.needHonor+'</td><td>'+obj.needFame+'</td><td><button onClick="addbuilt(\''+list[i]+'\')">Built</button></td></tr>';
+		}
 	}
 	$('#buildPlace').html(output);
 }
@@ -387,6 +409,7 @@ var addbuilt = function(arg){
 				userData.idle.exp+=obj.addExp;
 				userData.idle.gold+=obj.addGold;
 				userData.build[arg]+=1;
+				checkExtraStat();
 			}else if(arg == 'cityH'){
 			}else if(arg == 'trainH'){
 			}else{
@@ -396,8 +419,10 @@ var addbuilt = function(arg){
 	}else{printMsg('Not Enough Exp');}
 	checkBuild();
 }
+
+var checkSkill = function(){
+}
 /*
-몹 사냥시에 색 변하기
 design 업글하면 icon추가해주기 - checkstat 반복문 내 ouput에 링크걸기
 자동생산, 스킬, 장비
 */
