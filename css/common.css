@@ -14,13 +14,10 @@ td[title]{cursor:help;}
 	white-space: nowrap;
 	margin: 2px;
 	cursor: pointer;
-	background-color: #aaa;
 	text-align:center;
 }
-.btn:hover{
-	background-color: #666;
-	color:#ff0 ;
-}
+.btn:hover{ opacity: 0.8; }
+[onClick*=startBattle]{background-color: #27da27;}
 
 .fSize1{
 	width: 100px;
@@ -58,6 +55,8 @@ div.select{
 .blue{color:#3204b9;}
 .yellow{color:yellow;}
 .bg-g{background-color: green;}
+.bg-y{background-color: #c4da0e;}
+.bg-y2{background-color: #859407;}
 /*
 tr[id*="uStat"] td:nth-child(3){border-right: 1px solid;}
 */
