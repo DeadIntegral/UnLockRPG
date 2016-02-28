@@ -31,16 +31,9 @@ var upgrade = {
 		},
 		menu:{
 			0:{name:'Unlock Build Menu', costExp:100},
-			1:{name:'Unlock Skill Menu', costExp:1000},
+			1:{name:'Unlock Skill Menu', costExp:200},
 			2:{name:'Unlock Bag Menu', costExp:20000},
 			3:{name:'Unlock Shop Menu', costExp:20000},
 		}
 	}
-	
 };
-var skill = {
-	active:{},
-	passive:{
-		0:{name:'', effect:'', costExp:10, maxLv:5}
-	}
-}
