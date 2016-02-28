@@ -74,3 +74,34 @@ tr[id*="uStat"] td:nth-child(3){border-right: 1px solid;}
 	display:inline-block;
 	width:35%;
 }
+
+#skillWindow img{
+	height:64px;
+	width:64px;
+	padding: 20px 20px;
+}
+
+.tooltip {
+	position: relative;
+	display: inline-block;
+}
+
+.tooltip .tooltext {
+	visibility: hidden;
+	min-width: 120px;
+	background-color: black;
+	color: #fff;
+	text-align: center;
+	border-radius: 6px;
+	padding: 5px 0;
+	
+	position: absolute;
+	z-index: 1;
+	top: -5px;
+	left: 105%;
+	/* margin-left: -60px; */
+}
+
+.tooltip:hover .tooltext {
+	visibility: visible;
+}
