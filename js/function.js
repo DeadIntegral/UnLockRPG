@@ -29,11 +29,14 @@ var unlcokFunc = function(arg){
 	}else{
 		if(obj.costExp<=userData.stat.exp){
 			if(typeof obj.otherUnlock != 'undefined'){checkUnlock(obj.otherUnlock);}
+			//cost 계산 하나로 통합하기 - gold도 그냥 조건문에 넣어서
 			if(arg=='stat'){
 				userData.stat.exp -= obj.costExp;
 				userData.stat[obj.target]=5;
+				if(obj.target=='mp'){userData.stat[obj.target]=20;}
 				userData.unlock.stat+=1;
 				checkStat();
+				statBtnRefresh();
 			}else if(arg=='eStat'){
 				if(obj.otherUnlock == 'idle'){ checkUnlock('idle'); }
 				userData.stat.exp -= obj.costExp;
@@ -53,7 +56,7 @@ var unlcokFunc = function(arg){
 					userData.unlock.idle+=1;
 					userData.idle.exp+=exp; userData.idle.gold+=gold;
 					checkExtraStat();
-					statBtnRefresh();
+					statRefresh();
 				}else{printMsg('Not Enough Gold');}
 			}else if(arg=='menu'){
 				userData.stat.exp -= obj.costExp;
@@ -107,9 +110,8 @@ var startBattle = function(emyNum){
 		for(var key in enemyData[emyNum]){
 			if(!enemyData[emyNum].hasOwnProperty(key)) continue;
 			e[key]=enemyData[emyNum][key];
-			
 		}
-		u = userData.stat; //링크만 걸림 나중에 수정하기
+		u = userData.tStat; //링크만 걸림 나중에 수정하기
 		var output = '';
 		if(typeof e.title != 'undefined'){output+=e.title;}
 		output+=e.name+'<br>몹 이미지 넣을 공간<br>';
@@ -137,19 +139,18 @@ var startBattle = function(emyNum){
 };
 var readyStat = function(o){
 	o.nhp=o.hp;
-	o.pa=(typeof o.pa != 'undefined')?o.pa:0;
-	o.pd=(typeof o.pd != 'undefined')?o.pd:0;
-	o.ma=(typeof o.ma != 'undefined')?o.ma:0;
-	o.md=(typeof o.md != 'undefined')?o.md:0;
-	o.efa=(typeof o.efa != 'undefined')?o.efa:0;
-	o.efd=(typeof o.efd != 'undefined')?o.efd:0;
-	o.eia=(typeof o.eia != 'undefined')?o.eia:0;
-	o.eid=(typeof o.eid != 'undefined')?o.eid:0;
-	o.eea=(typeof o.eea != 'undefined')?o.eea:0;
-	o.eed=(typeof o.eed != 'undefined')?o.eed:0;
+	var list = ['hp','mp','pa','pd','ma','md','efa','efd','eia','eid','eea','eed'];
+	for(var i=0; i<12; i++){
+		o[list[i]]=(typeof o[list[i]] != 'undefined')?o[list[i]]:0;
+	}
 	return o;
 };
-
+var calStat = function(){
+	var list = ['hp','mp','pa','pd','ma','md','efa','efd','eia','eid','eea','eed'];
+	for(var i=0; i<12; i++){
+		userData.tStat[list[i]] = userData.stat[list[i]]+userData.skill.stat[list[i]]; //+userData.equip.stat[list[i]];
+	}
+}
 var userAtk = function(emyNum){
 	var tdmg=0;
 	var pdmg = u.pa-e.pd;
@@ -206,7 +207,6 @@ var userAtk = function(emyNum){
 
 var enemyTurn = function(){
 	enemyAtk();
-	
 	if(u.nhp<=0){
 		printMsg('<span class="red">Defeated by '+e.name+'</span>');
 		battleEnd();
@@ -223,25 +223,25 @@ var enemyAtk = function(){
 	u.nhp-=tdmg;
 	$('#userHP').html(u.nhp+' / '+u.hp);
 };
-var statRefresh = function(){
-	var list = ['hp','mp','pa','pd','ma','md','efa','efd','eia','eid','eea','eed'];
-	for(var i=0; i<12; i++){
-		if(typeof userData.stat[list[i]] != 'undefined'){
-			$('#user'+list[i].toUpperCase()).html(userData.stat[list[i]]);
-		}
-	}
-	if(userData.unlock.statBtn>0){ statBtnRefresh(); }
-	var list2 = ['exp','gold','honor','fame'];
-	for(var i=0; i<4; i++){
-		if(typeof userData.stat[list2[i]] != 'undefined'){$('#user'+list2[i].charAt(0).toUpperCase() + list2[i].slice(1)).html(userData.stat[list2[i]]);}
-	}
-};
 var battleEnd = function(){
 	userData.status.battle=0;
 	$('#userHP').html(userData.stat.hp);
 	$('#battlePlace').html('');
 	e={};
 }
+var statRefresh = function(){
+	calStat();
+	var list = ['hp','mp','pa','pd','ma','md','efa','efd','eia','eid','eea','eed'];
+	for(var i=0; i<12; i++){
+		if(typeof userData.tStat[list[i]] != 'undefined'){
+			$('#user'+list[i].toUpperCase()).html(userData.tStat[list[i]]);
+		}
+	}
+	var list2 = ['exp','gold','honor','fame'];
+	for(var i=0; i<4; i++){
+		if(typeof userData.stat[list2[i]] != 'undefined'){$('#user'+list2[i].charAt(0).toUpperCase() + list2[i].slice(1)).html(userData.stat[list2[i]]);}
+	}
+};
 var statBtnRefresh = function(){
 	var list1 = ['hp','mp','pa','pd','ma','md']; var list2 = ['efa','efd','eia','eid','eea','eed'];
 	for(var i=0; i<list1.length; i++){
@@ -263,6 +263,7 @@ var addStat = function(arg){
 	}else{addStatModul(arg,1);}
 };
 var addStatModul = function(arg,num){
+	//소스 개편하기
 	if(arg=='hp' || arg=='mp'){
 		if(userData.stat.exp>=num*5){
 			userData.stat.exp-=num*5;
@@ -284,7 +285,6 @@ var addStatModul = function(arg,num){
 	}
 };
 
-
 var printMsg = function(output){
 	$('#msgPlace').html('');
 	if(msg.length==10){
@@ -296,6 +296,9 @@ var printMsg = function(output){
 		else{msg[0]=output;}
 	}
 	for(var i=0; i<10; i++){if(typeof msg[i] != 'undefined') $('#msgPlace').append(msg[i]+'<br>');}
+}
+var battleMsg = function(){
+	//그냥 출력하기(append) + 클리어 버튼 만들기
 }
 var autoMake = function(){
 	userData.stat.exp+=userData.idle.exp;
@@ -315,6 +318,8 @@ var saveOut = function(){
 	}
 }
 var saveIn = function(){
+	battleEnd();
+	
 	var encode = $('#saveCode').val();
 	var decode = LZString.decompressFromBase64(encode);
 	var revived = JSON.parse(decode);
@@ -328,6 +333,9 @@ var saveIn = function(){
 	checkExtraStat();
 	checkMenu();
 	checkBuild();
+	checkSkill();
+	checkSkillStat();
+	statRefresh();
 	statBtnRefresh();
 	
 	checkField();
@@ -336,6 +344,7 @@ var saveIn = function(){
 }
 
 var checkStat = function(){
+	if(typeof userData.tStat == 'undefined'){userData.tStat={};}
 	var list = ['hp','mp','pa','pd','ma','md','efa','efd','eia','eid','eea','eed'];
 	var output = '';
 	var s = userData.stat;
@@ -366,6 +375,18 @@ var checkExtraStat = function(){
 	if(check === parseInt(check, 10) && ch2.eStat>=3){output+='<div class="sName">Fame</div><div class="sVal"><span id="userFame">'+userData.stat.fame+'</span></div>';}
 	output += '</div>';
 	$('#uEStat').html(output);
+}
+var checkSkillStat = function(){
+	var list = ['hp','mp','pa','pd','ma','md','efa','efd','eia','eid','eea','eed'];
+	for(var i=0; i<12; i++){ userData.skill.stat[list[i]]=0; }
+	for(var key in userData.skill.passive){
+		if(!userData.skill.passive.hasOwnProperty(key)) continue;
+		if(userData.skill.passive[key]>0){
+			var nowObj = skill.passive[key][userData.skill.passive[key]];
+			var add = nowObj.add.split('+');
+			userData.skill.stat[add[0]]+=parseInt(add[1]);
+		}
+	}
 }
 var checkMenu = function(){
 	var output = '<div id="main" class="menuTab select clickAble" onclick="moveMenu(this)">Main</div><div id="config" class="menuTab clickAble" onclick="moveMenu(this)">Config</div>';
@@ -421,8 +442,68 @@ var addbuilt = function(arg){
 }
 
 var checkSkill = function(){
+	if(typeof userData.skill == 'undefined'){userData.skill = {};}
+	if(typeof userData.skill.active == 'undefined'){userData.skill.active = {};}
+	if(typeof userData.skill.passive == 'undefined'){userData.skill.passive = {};}
+	if(typeof userData.skill.stat == 'undefined'){userData.skill.stat = {};}
+}
+var outputSkill = function(){
+	var output='';
+	for(var key in skill.passive){
+		if(!skill.passive.hasOwnProperty(key)) continue;
+			output += '<div class="tooltip"><img src="./img/skill/'+(100+parseInt(key))+'.svg" onmouseover="outputSkillDetail(this)" onClick="learnSkill(this)"><span class="tooltext"></span></div>';
+			if(typeof skill.passive[parseInt(key)+1] == 'undefined'){output+='<br>';}
+	}
+	$('#skillWindow').html(output);
+}
+var outputSkillDetail = function(arg){
+	var output = '';
+	var tmp = arg.src.split('skill/');
+	var sNum = tmp[1].slice(0,3);
+	if(parseInt(sNum)<200){ sNum = parseInt(sNum%100); }
+	
+	if(userData.skill.passive[sNum] > 0){
+		var obj = skill.passive[sNum][userData.skill.passive[sNum]];
+		output += 'Current<br>'+obj.name+'<br>'+obj.add.toUpperCase();
+	}else{
+		userData.skill.passive[sNum]=0;
+	}
+	if(userData.skill.passive[sNum]<Object.keys(skill.passive[sNum]).length){
+		var obj = skill.passive[sNum][userData.skill.passive[sNum]+1];
+		var costExp = (typeof obj.costExp != 'undefined')?obj.costExp:0;
+		var costGold = (typeof obj.costGold != 'undefined')?obj.costGold:0;
+		if(output != ''){output+='<br><br>';}
+		output += 'Next<br>'+obj.name+'<br>'+obj.add.toUpperCase()+'<br>CostExp: '+costExp+'<br>CostGold: '+costGold;
+	}
+	output += '<br>Lv '+userData.skill.passive[sNum]+'/'+Object.keys(skill.passive[sNum]).length;
+	$(arg).closest('div').find('span').html(output);
+}
+var learnSkill = function(arg){
+	var tmp = arg.src.split('skill/');
+	var sNum = tmp[1].slice(0,3);
+	if(parseInt(sNum)<200){ sNum = parseInt(sNum%100); }
+	
+	var obj = skill.passive[sNum][userData.skill.passive[sNum]+1];
+	var costExp = (typeof obj.costExp != 'undefined')?obj.costExp:0;
+	var costGold = (typeof obj.costGold != 'undefined')?obj.costGold:0;
+	if(userData.stat.exp>costExp){
+		if(userData.stat.gold>costGold){
+			if(userData.skill.passive[sNum]>0){
+				//지금렙만큼 효과 감소
+				var nowObj = skill.passive[sNum][userData.skill.passive[sNum]];
+				var sub = nowObj.add.split('+');
+				userData.skill.stat[sub[0]]-=parseInt(sub[1]);
+			}
+			var add = obj.add.split('+');
+			userData.skill.stat[add[0]]+=parseInt(add[1]);
+			userData.skill.passive[sNum]+=1;
+			calStat();
+			statRefresh();
+		}else{printMsg('Not Enough Gold');}
+	}else{printMsg('Not Enough Exp');}
 }
 /*
+스킬렙이 2 이상이면 배울 때 지금렙만큼 효과감소 시키고 다음렙만큼 효과증가시키기
 design 업글하면 icon추가해주기 - checkstat 반복문 내 ouput에 링크걸기
 자동생산, 스킬, 장비
 */
