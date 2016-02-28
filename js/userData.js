@@ -4,6 +4,7 @@ var userData = {
 		hp:50,
 		exp:0
 	},
+	tStat:{},
 	equip:{
 	},
 	unlock:{
@@ -20,4 +21,9 @@ var userData = {
 	status:{battle:0},
 	idle:{exp:0, gold:0},
 	build:{},
+	skill:{
+		active:{},
+		passive:{},
+		stat:{}
+	}
 };
