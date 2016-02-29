@@ -74,13 +74,15 @@ tr[id*="uStat"] td:nth-child(3){border-right: 1px solid;}
 	display:inline-block;
 	width:35%;
 }
-
 #skillWindow img{
 	height:64px;
 	width:64px;
-	padding: 20px 20px;
+	padding: 10px 20px;
 }
-
+.skillList{
+	display:inline-block;
+	width:49%;
+}
 .tooltip {
 	position: relative;
 	display: inline-block;
@@ -104,4 +106,17 @@ tr[id*="uStat"] td:nth-child(3){border-right: 1px solid;}
 
 .tooltip:hover .tooltext {
 	visibility: visible;
+}
+/*
+button[id*=skill]{
+	min-width:60px;
+}
+*/
+img[id*=skill]{
+	width:48px;
+	height:48px;
+	margin: 5px 5px;
+}
+img[id*=skill]:hover{
+	border: 2px solid #c134a3;
 }
