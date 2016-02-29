@@ -1,5 +1,33 @@
 var skill = {
-	active:{},
+	active:{
+		1:{
+			1:{name:'BashⅠ', type:1, effect:'pa*1.1', mp:10, cool:1},
+			2:{name:'BashⅡ', type:1, effect:'pa*1.2', mp:20, cool:1},
+			3:{name:'BashⅢ', type:1, effect:'pa*1.3', mp:50, cool:1},
+			4:{name:'BashⅣ', type:1, effect:'pa*1.4', mp:100, cool:1},
+			5:{name:'BashⅤ', type:1, effect:'pa*1.5', mp:170, cool:1},
+		},
+		51:{
+			1:{name:'Fire BallⅠ', type:2, effect:'ma*1,ma+0', mp:10, cool:1},
+			2:{name:'Fire BallⅡ', type:2, effect:'ma*1,ma+0', mp:10, cool:1},
+		},
+		52:{
+			1:{name:'Fire StrikeⅠ', type:2, effect:'ma*1,ma+0', mp:10, cool:1},
+			2:{name:'Fire StrikeⅡ', type:2, effect:'ma*1,ma+0', mp:10, cool:1},
+		},
+		53:{
+			1:{name:'Fire WaveⅠ', type:2, effect:'ma*1,ma+0', mp:10, cool:1},
+			2:{name:'Fire WaveⅡ', type:2, effect:'ma*1,ma+0', mp:10, cool:1},
+		},
+		54:{
+			1:{name:'EruptionⅠ', type:2, effect:'ma*1,ma+0', mp:10, cool:1},
+			2:{name:'EruptionⅡ', type:2, effect:'ma*1,ma+0', mp:10, cool:1},
+		},
+		55:{
+			1:{name:'MeteorⅠ', type:2, effect:'ma*5,ma+0', mp:10, cool:10},
+			2:{name:'MeteorⅡ', type:2, effect:'ma*5,ma+0', mp:10, cool:10},
+		},
+	},
 	passive:{
 		1:{
 			1:{name:'Sword TrainingⅠ', add:'pa+40', costGold:100, costExp:100, need:1},
@@ -9,9 +37,9 @@ var skill = {
 			5:{name:'Sword TrainingⅤ', add:'pa+600', costGold:500, costExp:500, need:1},
 		},
 		2:{
-			1:{name:'니토리검술Ⅰ', add:'pa+0', costGold:100, needSkill:1},
-			2:{name:'니토리검술Ⅱ', add:'pa+0', costGold:100, need:1},
-			3:{name:'니토리검술Ⅲ', add:'pa+0', costGold:100, need:1},
+			1:{name:'Battle TrainingⅠ', add:'pa+0', costGold:100, needSkill:1},
+			2:{name:'Battle TrainingⅡ', add:'pa+0', costGold:100, need:1},
+			3:{name:'Battle TrainingⅢ', add:'pa+0', costGold:100, need:1},
 		},
 		11:{
 			1:{name:'Guard TrainingⅠ', add:'pd+40', costGold:100, costExp:100, need:1 },
@@ -47,4 +75,6 @@ active
  화염구fire ball
  
  쿨타임넣기 - 스턴기 등
+보스 죽일 경우 정수획득
+ 현재 정수치는 매 턴마다 감소, 스킬사용시 정수증가, 최대정수보다 낮아야 스킬 사용가능
 */
