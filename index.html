@@ -31,6 +31,7 @@ $(document).ready(function(){
 	unlockField(0);
 	outputSkill();
 	checkSkillStat();
+	calStat();
 	
 	$('[id*=Window]').css('display','none');
 	$('#mainWindow').css('display','block');
@@ -45,17 +46,6 @@ $(document).ready(function(){
 <table>
 	<tr>
 		<td class="va-top" width="40%">
-			<!--
-			<table id="userData">
-				<tr><td colspan="2">Name</td></tr>
-				<tr id="uStat10"><td title="Health Point">HP</td><td><span id="userHP"></span><span id="uHPUp"></span></td></tr>
-				<tr id="uStat20"><td title="Physical Attack">PA</td><td><span id="userPA"></span><span id="uPAUp"></span></td></tr>
-				<tr id="uStat30"></tr><tr id="uStat40"></tr><tr id="uStat50"></tr><tr id="uStat60"></tr>
-				<tr id="uStat70"><td>Exp</td><td id="userExp"></td></tr>
-				<tr id="uStat80"><td></td><td id="genExp" align="center"></td><td></td><td id="genGold" align="center"></td></tr>
-				<tr id="uStat90"></tr>
-			</table>
-			-->
 			<div id="userData">
 				<div id="uName">Name</div>
 				<div id="uStat"></div>
@@ -107,7 +97,8 @@ next update
 </div>
 
 <div id="skillWindow">
-	
+	<div id="passiveList" class="va-top skillList"></div>
+	<div id="activeList" class="va-top skillList"></div>
 </div>
 
 <div id="shopWindow">
