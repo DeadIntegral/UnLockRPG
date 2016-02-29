@@ -116,8 +116,17 @@ var startBattle = function(emyNum){
 		if(typeof e.title != 'undefined'){output+=e.title;}
 		output+=e.name+'<br>몹 이미지 넣을 공간<br>';
 		output+='<div id="eHp">'+e.hp+' / '+e.hp+'</div>'; //fix01
-		output+='<button onclick="userAtk('+emyNum+')">Attack</button><br><br>';
-		output+='<button onclick="battleEnd()">Away</button>';
+		output+='<button onClick="userAtk('+emyNum+',0)">Attack</button><br>';
+		for(var key in userData.skill.active){
+			if(!userData.skill.active.hasOwnProperty(key)) continue;
+			if(userData.skill.active[key]>0){
+				//output+='<button id="skill'+key+'" onClick="userAtk('+emyNum+','+key+')">'+skill.active[key][userData.skill.active[key]].name+'</button>';
+				output += '<img id="skill'+key+'" src="./img/skill/'+(500+parseInt(key))+'.svg" onClick="userAtk('+emyNum+','+key+')"></div>';
+			}
+			if(typeof skill.active[parseInt(key)+1] == 'undefined'){output+='<br>';}
+		}
+		
+		output+='<br><br><button onclick="battleEnd()">Away</button>';
 		output+='<table><tr>';
 		if(typeof e.pa != 'undefined'){output += '<td>PA</td><td>'+e.pa+'</td>';}
 		if(typeof e.pd != 'undefined'){output += '<td>PD</td><td>'+e.pd+'</td>';}
@@ -133,12 +142,15 @@ var startBattle = function(emyNum){
 		output += '</tr></table>';
 		u=readyStat(u);
 		$('#userHP').html(u.nhp+' / '+u.hp);
+		$('#userMP').html(u.nmp+' / '+u.mp);
 		e=readyStat(e);
 		$('#battlePlace').html(output);
 	}
 };
 var readyStat = function(o){
+	o.cool={};
 	o.nhp=o.hp;
+	o.nmp=o.mp;
 	var list = ['hp','mp','pa','pd','ma','md','efa','efd','eia','eid','eea','eed'];
 	for(var i=0; i<12; i++){
 		o[list[i]]=(typeof o[list[i]] != 'undefined')?o[list[i]]:0;
@@ -151,13 +163,47 @@ var calStat = function(){
 		userData.tStat[list[i]] = userData.stat[list[i]]+userData.skill.stat[list[i]]; //+userData.equip.stat[list[i]];
 	}
 }
-var userAtk = function(emyNum){
+var userAtk = function(emyNum,sNum){
 	var tdmg=0;
 	var pdmg = u.pa-e.pd;
 	var mdmg = (u.ma>0)?(u.ma-e.md):0;
-	var efdmg = u.efa-e.efd;
-	var eidmg = u.eia-e.eid;
-	var eedmg = u.eea-e.eed;
+	var efdmg = (u.efa>0)?(u.efa-e.efd):0;
+	var eidmg = (u.eia>0)?(u.eia-e.eid):0;
+	var eedmg = (u.eea>0)?(u.eea-e.eed):0;
+	if(sNum != 0){
+		if(u.cool[sNum] == 0 || typeof u.cool[sNum] == 'undefined'){
+			var obj = skill.active[sNum][userData.skill.active[sNum]];
+			if(obj.mp<=u.nmp){
+				if(obj.type == 1){
+					var tmp = obj.effect.split('*');
+					dmg = parseInt((u[tmp[0]]*tmp[1]), 10);
+					if(tmp[0]=='pa'){pdmg=dmg;}
+				}else if(obj.type == 2){}
+				
+				u.cool[sNum]=(obj.cool+1);
+				u.nmp-=obj.mp;
+				$('#userMP').html(u.nmp+' / '+u.mp);
+			}else{
+				printMsg('Not Enough MP');
+				return 0;
+			}
+		}else{
+			printMsg('Wait Cooltime '+u.cool[sNum]+' Turn');
+			return 0;
+		}
+	}else if(sNum == 0){
+		//평타
+	}
+	for(var key in u.cool){
+		//if(!u.cool(key)) continue;
+		if(u.cool[key]>0){u.cool[key]-=1;}
+		if(u.cool[key]==0){
+			$('#skill'+key).html(skill.active[key][userData.skill.active[key]].name);
+		}else{
+			$('#skill'+key).html(u.cool[key]);
+		}
+	}
+	
 	if(pdmg>=0){tdmg+=pdmg;} if(mdmg>=0){tdmg+=mdmg;} if(efdmg>=0){tdmg+=efdmg;} if(eidmg>=0){tdmg+=eidmg;} if(eedmg>=0){tdmg+=eedmg;}
 	e.nhp-=tdmg;
 	$('#eHp').html(e.nhp+' / '+e.hp);
@@ -226,6 +272,7 @@ var enemyAtk = function(){
 var battleEnd = function(){
 	userData.status.battle=0;
 	$('#userHP').html(userData.stat.hp);
+	$('#userMP').html(userData.stat.mp);
 	$('#battlePlace').html('');
 	e={};
 }
@@ -263,26 +310,14 @@ var addStat = function(arg){
 	}else{addStatModul(arg,1);}
 };
 var addStatModul = function(arg,num){
-	//소스 개편하기
-	if(arg=='hp' || arg=='mp'){
-		if(userData.stat.exp>=num*5){
-			userData.stat.exp-=num*5;
-			userData.stat[arg]+=num*10;
-			statRefresh();
-		}else{printMsg('Not Enough Exp');}
-	}else if(arg.length==3){
-		if(userData.stat.exp>=num*10){
-			userData.stat.exp-=num*10;
-			userData.stat[arg]+=num;
-			statRefresh();
-		}else{printMsg('Not Enough Exp');}
-	}else{
-		if(userData.stat.exp>=num*5){
-			userData.stat.exp-=num*5;
-			userData.stat[arg]+=num;
-			statRefresh();
-		}else{printMsg('Not Enough Exp');}
-	}
+	var costExp = num*5;
+	if(arg.length==3){costExp=num*10}
+	if(userData.stat.exp>=costExp){
+		userData.stat.exp-=costExp;
+		if(arg=='hp' || arg=='mp'){ userData.stat[arg] += num*10; }
+		else{userData.stat[arg] += num;}
+		statRefresh();
+	}else{printMsg('Not Enough Exp');}
 };
 
 var printMsg = function(output){
@@ -290,8 +325,7 @@ var printMsg = function(output){
 	if(msg.length==10){
 		for(var i=0; i<9; i++){msg[i]=msg[i+1];}
 		msg[9]=output;
-	}
-	else{
+	}else{
 		if(typeof msg.length != 'undefined'){msg[msg.length]=output;}
 		else{msg[0]=output;}
 	}
@@ -424,13 +458,13 @@ var addbuilt = function(arg){
 			userData.stat.exp-=obj.costExp;
 			userData.stat.gold-=obj.costGold;
 			
+			if(typeof obj.addExp == 'undefined'){obj.addExp=0;}
+			if(typeof obj.addGold == 'undefined'){obj.addGold=0;}
+			userData.idle.exp+=obj.addExp;
+			userData.idle.gold+=obj.addGold;
+			userData.build[arg]+=1;
+			checkExtraStat();
 			if(arg == 'farm'){
-				if(typeof obj.addExp == 'undefined'){obj.addExp=0;}
-				if(typeof obj.addGold == 'undefined'){obj.addGold=0;}
-				userData.idle.exp+=obj.addExp;
-				userData.idle.gold+=obj.addGold;
-				userData.build[arg]+=1;
-				checkExtraStat();
 			}else if(arg == 'cityH'){
 			}else if(arg == 'trainH'){
 			}else{
@@ -451,59 +485,85 @@ var outputSkill = function(){
 	var output='';
 	for(var key in skill.passive){
 		if(!skill.passive.hasOwnProperty(key)) continue;
-			output += '<div class="tooltip"><img src="./img/skill/'+(100+parseInt(key))+'.svg" onmouseover="outputSkillDetail(this)" onClick="learnSkill(this)"><span class="tooltext"></span></div>';
-			if(typeof skill.passive[parseInt(key)+1] == 'undefined'){output+='<br>';}
+		output += '<div class="tooltip"><img src="./img/skill/'+(100+parseInt(key))+'.svg" onmouseover="outputSkillDetail(this)" onClick="learnSkill(this)"><span class="tooltext"></span></div>';
+		if(typeof skill.passive[parseInt(key)+1] == 'undefined'){output+='<br>';}
 	}
-	$('#skillWindow').html(output);
+	$('#passiveList').html(output);
+	
+	output='';
+	for(var key in skill.active){
+		if(!skill.active.hasOwnProperty(key)) continue;
+		output += '<div class="tooltip"><img src="./img/skill/'+(500+parseInt(key))+'.svg" onmouseover="outputSkillDetail(this)" onClick="learnSkill(this)"><span class="tooltext"></span></div>';
+		if(typeof skill.active[parseInt(key)+1] == 'undefined'){output+='<br>';}
+	}
+	$('#activeList').html(output);
 }
 var outputSkillDetail = function(arg){
 	var output = '';
 	var tmp = arg.src.split('skill/');
 	var sNum = tmp[1].slice(0,3);
-	if(parseInt(sNum)<200){ sNum = parseInt(sNum%100); }
+	var kind='';
+	if(parseInt(sNum)<500){kind = 'passive';
+	}else if(parseInt(sNum)>500){kind = 'active';}
 	
-	if(userData.skill.passive[sNum] > 0){
-		var obj = skill.passive[sNum][userData.skill.passive[sNum]];
-		output += 'Current<br>'+obj.name+'<br>'+obj.add.toUpperCase();
+	sNum = parseInt(sNum%100);
+	
+	if(userData.skill[kind][sNum] > 0){
+		var obj = skill[kind][sNum][userData.skill[kind][sNum]];
+		if(kind=='passive'){
+			output += 'Current<br>'+obj.name+'<br>'+obj.add.toUpperCase();
+		}else if(kind == 'active'){
+			output += 'Current<br>'+obj.name+'<br>'+obj.effect.toUpperCase()+'<br>CostMP:'+obj.mp;
+		}
 	}else{
-		userData.skill.passive[sNum]=0;
+		userData.skill[kind][sNum]=0;
 	}
-	if(userData.skill.passive[sNum]<Object.keys(skill.passive[sNum]).length){
-		var obj = skill.passive[sNum][userData.skill.passive[sNum]+1];
+	if(userData.skill[kind][sNum]<Object.keys(skill[kind][sNum]).length){
+		var obj = skill[kind][sNum][userData.skill[kind][sNum]+1];
 		var costExp = (typeof obj.costExp != 'undefined')?obj.costExp:0;
 		var costGold = (typeof obj.costGold != 'undefined')?obj.costGold:0;
 		if(output != ''){output+='<br><br>';}
-		output += 'Next<br>'+obj.name+'<br>'+obj.add.toUpperCase()+'<br>CostExp: '+costExp+'<br>CostGold: '+costGold;
+		if(kind == 'passive'){
+			output += 'Next<br>'+obj.name+'<br>'+obj.add.toUpperCase()+'<br>CostExp: '+costExp+'<br>CostGold: '+costGold;
+		}else if(kind == 'active'){
+			output += 'Next<br>'+obj.name+'<br>'+obj.effect.toUpperCase()+'<br>CostMP:'+obj.mp+'<br>CostExp: '+costExp+'<br>CostGold: '+costGold;
+		}
 	}
-	output += '<br>Lv '+userData.skill.passive[sNum]+'/'+Object.keys(skill.passive[sNum]).length;
+	output += '<br>Lv '+userData.skill[kind][sNum]+'/'+Object.keys(skill[kind][sNum]).length;
 	$(arg).closest('div').find('span').html(output);
 }
 var learnSkill = function(arg){
 	var tmp = arg.src.split('skill/');
 	var sNum = tmp[1].slice(0,3);
-	if(parseInt(sNum)<200){ sNum = parseInt(sNum%100); }
+	var kind='';
+	if(parseInt(sNum)<500){kind = 'passive';
+	}else if(parseInt(sNum)>500){kind = 'active';}
+	sNum = parseInt(sNum%100);
 	
-	var obj = skill.passive[sNum][userData.skill.passive[sNum]+1];
+	var obj = skill[kind][sNum][userData.skill[kind][sNum]+1];
 	var costExp = (typeof obj.costExp != 'undefined')?obj.costExp:0;
 	var costGold = (typeof obj.costGold != 'undefined')?obj.costGold:0;
+	
 	if(userData.stat.exp>costExp){
 		if(userData.stat.gold>costGold){
-			if(userData.skill.passive[sNum]>0){
-				//지금렙만큼 효과 감소
-				var nowObj = skill.passive[sNum][userData.skill.passive[sNum]];
-				var sub = nowObj.add.split('+');
-				userData.skill.stat[sub[0]]-=parseInt(sub[1]);
-			}
-			var add = obj.add.split('+');
-			userData.skill.stat[add[0]]+=parseInt(add[1]);
-			userData.skill.passive[sNum]+=1;
-			calStat();
-			statRefresh();
+			if(kind == 'passive'){
+				if(userData.skill.passive[sNum]>0){
+					var nowObj = skill.passive[sNum][userData.skill.passive[sNum]];
+					var sub = nowObj.add.split('+');
+					userData.skill.stat[sub[0]]-=parseInt(sub[1]);
+				}
+				var add = obj.add.split('+');
+				userData.skill.stat[add[0]]+=parseInt(add[1]);
+				calStat();
+				statRefresh();
+			}else if(kind == 'active'){}
+			userData.skill[kind][sNum]+=1;
 		}else{printMsg('Not Enough Gold');}
 	}else{printMsg('Not Enough Exp');}
 }
+
 /*
-스킬렙이 2 이상이면 배울 때 지금렙만큼 효과감소 시키고 다음렙만큼 효과증가시키기
+스킬 사용 시 쿨타임만큼 숫자쓰는 대신 반투명div로 덮었다가 남은 쿨타임에 비례해서 내려오기(0이면 크기0)
 design 업글하면 icon추가해주기 - checkstat 반복문 내 ouput에 링크걸기
-자동생산, 스킬, 장비
+장비
 */
