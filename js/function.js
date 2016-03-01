@@ -18,49 +18,44 @@ var checkUnlockFunc = function(num,name){
 		if(typeof obj.costExp == 'undefined'){obj.costExp=0;}
 		if(typeof obj.costGold == 'undefined'){obj.costGold=0;}
 		
-		var output = '<td>'+obj.name+'</td><td align="right">'+obj.costExp+'</td><td align="right">'+obj.costGold+'</td><td align="right"><button onclick="unlcokFunc(\''+name+'\')">Unlock</button></td>';
+		var output = '<td>'+obj.name+'</td><td align="right">'+obj.costExp+'</td><td align="right">'+obj.costGold+'</td><td align="right"><button onclick="unlockFunc(\''+name+'\')">Unlock</button></td>';
 	}
 	return output;
 }
-var unlcokFunc = function(arg){
+var unlockFunc = function(arg){
 	var obj = upgrade.lock[arg][userData.unlock[arg]];
 	if(typeof obj=='undefined'){
 		//input value 0
 	}else{
 		if(obj.costExp<=userData.stat.exp){
-			if(typeof obj.otherUnlock != 'undefined'){checkUnlock(obj.otherUnlock);}
+			if(typeof obj.otherUnlock != 'undefined'){
+				userData.unlock[obj.otherUnlock]+=1;
+				checkUnlock(obj.otherUnlock);
+			}
+			userData.unlock[arg]+=1;
+			if(typeof obj.costExp != 'undefined'){userData.stat.exp -= obj.costExp;}
 			//cost 계산 하나로 통합하기 - gold도 그냥 조건문에 넣어서
 			if(arg=='stat'){
-				userData.stat.exp -= obj.costExp;
 				userData.stat[obj.target]=5;
 				if(obj.target=='mp'){userData.stat[obj.target]=20;}
-				userData.unlock.stat+=1;
 				checkStat();
 				statBtnRefresh();
 			}else if(arg=='eStat'){
 				if(obj.otherUnlock == 'idle'){ checkUnlock('idle'); }
-				userData.stat.exp -= obj.costExp;
 				userData.stat[obj.target]=0;
-				userData.unlock.eStat+=1;
 				checkExtraStat();
 			}else if(arg=='statBtn'){
-				userData.stat.exp -= obj.costExp;
-				userData.unlock.statBtn+=1;
 				statBtnRefresh();
 			}else if(arg=='idle'){
 				if(obj.costGold<=userData.stat.gold){
-					if(typeof obj.costExp != 'undefined'){userData.stat.exp -= obj.costExp;}
 					if(typeof obj.costGold != 'undefined'){userData.stat.gold -= obj.costGold;}
 					var exp = (typeof obj.addExp != 'undefined')?obj.addExp:0;
 					var gold = (typeof obj.addGold != 'undefined')?obj.addGold:0;
-					userData.unlock.idle+=1;
 					userData.idle.exp+=exp; userData.idle.gold+=gold;
 					checkExtraStat();
 					statRefresh();
 				}else{printMsg('Not Enough Gold');}
 			}else if(arg=='menu'){
-				userData.stat.exp -= obj.costExp;
-				userData.unlock.menu+=1;
 				if(userData.unlock.menu==1){checkBuild();}
 				checkMenu();
 			}
@@ -121,12 +116,12 @@ var startBattle = function(emyNum){
 			if(!userData.skill.active.hasOwnProperty(key)) continue;
 			if(userData.skill.active[key]>0){
 				//output+='<button id="skill'+key+'" onClick="userAtk('+emyNum+','+key+')">'+skill.active[key][userData.skill.active[key]].name+'</button>';
-				output += '<img id="skill'+key+'" src="./img/skill/'+(500+parseInt(key))+'.svg" onClick="userAtk('+emyNum+','+key+')"></div>';
+				output += '<div class="skill"><img id="skill'+key+'" src="./img/skill/'+(500+parseInt(key))+'.svg" onClick="userAtk('+emyNum+','+key+')"><div id="cool'+key+'"></div></div>';
 			}
 			if(typeof skill.active[parseInt(key)+1] == 'undefined'){output+='<br>';}
 		}
 		
-		output+='<br><br><button onclick="battleEnd()">Away</button>';
+		output+='<br><button onclick="battleEnd()">Away</button>';
 		output+='<table><tr>';
 		if(typeof e.pa != 'undefined'){output += '<td>PA</td><td>'+e.pa+'</td>';}
 		if(typeof e.pd != 'undefined'){output += '<td>PD</td><td>'+e.pd+'</td>';}
@@ -160,51 +155,75 @@ var readyStat = function(o){
 var calStat = function(){
 	var list = ['hp','mp','pa','pd','ma','md','efa','efd','eia','eid','eea','eed'];
 	for(var i=0; i<12; i++){
-		userData.tStat[list[i]] = userData.stat[list[i]]+userData.skill.stat[list[i]]; //+userData.equip.stat[list[i]];
+		if(typeof userData.stat[list[i]] != 'undefined'){
+			userData.tStat[list[i]] = userData.stat[list[i]]+userData.skill.stat[list[i]]; //+userData.equip.stat[list[i]];
+		}
 	}
 }
 var userAtk = function(emyNum,sNum){
+	var bMsg = '';
+	var dmg = {pdmg:0, mdmg:0, efdmg:0, eidmg:0, eedmg:0};
 	var tdmg=0;
-	var pdmg = u.pa-e.pd;
-	var mdmg = (u.ma>0)?(u.ma-e.md):0;
-	var efdmg = (u.efa>0)?(u.efa-e.efd):0;
-	var eidmg = (u.eia>0)?(u.eia-e.eid):0;
-	var eedmg = (u.eea>0)?(u.eea-e.eed):0;
 	if(sNum != 0){
 		if(u.cool[sNum] == 0 || typeof u.cool[sNum] == 'undefined'){
 			var obj = skill.active[sNum][userData.skill.active[sNum]];
+			bMsg = obj.name+'! ';
 			if(obj.mp<=u.nmp){
 				if(obj.type == 1){
 					var tmp = obj.effect.split('*');
-					dmg = parseInt((u[tmp[0]]*tmp[1]), 10);
-					if(tmp[0]=='pa'){pdmg=dmg;}
-				}else if(obj.type == 2){}
+					dmg[tmp[0].replace('a','dmg')] = parseInt((u[tmp[0]]*tmp[1]), 10);
+				}else if(obj.type == 2){
+					var tmp = obj.effect.split(',');
+					var mul = tmp[0].split('*');
+					var add = tmp[1].split('+');
+					dmg[mul[0].replace('a','dmg')] = parseInt((u[mul[0]]*mul[1]), 10);
+					dmg[add[0].replace('a','dmg')] += parseInt(add[1], 10);
+				}
 				
 				u.cool[sNum]=(obj.cool+1);
 				u.nmp-=obj.mp;
 				$('#userMP').html(u.nmp+' / '+u.mp);
 			}else{
-				printMsg('Not Enough MP');
+				battleMsg('Not Enough MP');
 				return 0;
 			}
 		}else{
-			printMsg('Wait Cooltime '+u.cool[sNum]+' Turn');
+			battleMsg('Wait Cooltime '+u.cool[sNum]+' Turn');
 			return 0;
 		}
-	}else if(sNum == 0){
-		//평타
+	}else if(sNum == 0){ //nomal atk
+		dmg.pdmg=u.pa;
+		bMsg = 'Attack! ';
 	}
 	for(var key in u.cool){
 		//if(!u.cool(key)) continue;
 		if(u.cool[key]>0){u.cool[key]-=1;}
 		if(u.cool[key]==0){
-			$('#skill'+key).html(skill.active[key][userData.skill.active[key]].name);
+			$('#cool'+key).css('height','0');
 		}else{
-			$('#skill'+key).html(u.cool[key]);
+			var height = 40*((u.cool[key])/skill.active[key][userData.skill.active[key]].cool);
+			var margin = (height*-1)-6; //border2 + margin3
+			$('#cool'+key).css('height',height);
+			$('#cool'+key).css('margin-top',margin+'px');
 		}
 	}
 	
-	if(pdmg>=0){tdmg+=pdmg;} if(mdmg>=0){tdmg+=mdmg;} if(efdmg>=0){tdmg+=efdmg;} if(eidmg>=0){tdmg+=eidmg;} if(eedmg>=0){tdmg+=eedmg;}
+	if(u.efa>0){dmg.efdmg=u.efa;}
+	if(u.eia>0){dmg.eidmg=u.eia;}
+	if(u.eea>0){dmg.eedmg=u.eea;}
+	var list = ['pdmg','mdmg','efdmg','eidmg','eedmg'];
+	var list2 = ['pd','md','efd','eid','eed'];
+	for(var i=0; i<5; i++){
+		if(dmg[list[i]] > 0){
+			if(e[list2[i]] != 'undefined'){
+				dmg[list[i]]-=e[list2[i]];
+				if(dmg[list[i]]<0){dmg[list[i]]=0;}
+			}
+			tdmg+=dmg[list[i]];
+		}
+	}
+	bMsg += '<b>'+tdmg+'</b> Damage';
+	battleMsg(bMsg);
 	e.nhp-=tdmg;
 	$('#eHp').html(e.nhp+' / '+e.hp);
 	if(e.nhp<=0){
@@ -260,12 +279,28 @@ var enemyTurn = function(){
 };
 var enemyAtk = function(){
 	var tdmg=0;
-	var pdmg=e.pa-u.pd;
-	var mdmg=e.ma-u.md;
-	var efdmg = e.efa-u.efd;
-	var eidmg = e.eia-u.eid;
-	var eedmg = e.eea-u.eed;
-	if(pdmg>=0){tdmg+=pdmg;} if(mdmg>=0){tdmg+=mdmg;} if(efdmg>=0){tdmg+=efdmg;} if(eidmg>=0){tdmg+=eidmg;} if(eedmg>=0){tdmg+=eedmg;}
+	var dmg = {pdmg:0, mdmg:0, efdmg:0, eidmg:0, eedmg:0};
+	
+	//nomal attack
+	dmg.pdmg = e.pa;
+	dmg.mdmg = e.ma;
+	
+	if(e.efa>0){dmg.efdmg=e.efa;}
+	if(e.eia>0){dmg.eidmg=e.eia;}
+	if(e.eea>0){dmg.eedmg=e.eea;}
+	var list = ['pdmg','mdmg','efdmg','eidmg','eedmg'];
+	var list2 = ['pd','md','efd','eid','eed'];
+	for(var i=0; i<5; i++){
+		if(dmg[list[i]] > 0){
+			if(typeof u[list2[i]] != 'undefined'){
+				dmg[list[i]]-=u[list2[i]];
+				if(dmg[list[i]]<0){dmg[list[i]]=0;}
+			}
+			tdmg+=dmg[list[i]];
+		}
+	}
+	
+	battleMsg('<div class="rText">'+tdmg+' Damage</div>')
 	u.nhp-=tdmg;
 	$('#userHP').html(u.nhp+' / '+u.hp);
 };
@@ -274,6 +309,7 @@ var battleEnd = function(){
 	$('#userHP').html(userData.stat.hp);
 	$('#userMP').html(userData.stat.mp);
 	$('#battlePlace').html('');
+	$('#battleMsgPlace').html('');
 	e={};
 }
 var statRefresh = function(){
@@ -331,8 +367,10 @@ var printMsg = function(output){
 	}
 	for(var i=0; i<10; i++){if(typeof msg[i] != 'undefined') $('#msgPlace').append(msg[i]+'<br>');}
 }
-var battleMsg = function(){
-	//그냥 출력하기(append) + 클리어 버튼 만들기
+var battleMsg = function(arg){
+	$('#battleMsgPlace').append('<div>'+arg+'</div>');
+	var obj = document.getElementById('battleMsgPlace');
+	obj.scrollTop = obj.scrollHeight;
 }
 var autoMake = function(){
 	userData.stat.exp+=userData.idle.exp;
@@ -426,15 +464,15 @@ var checkMenu = function(){
 	var output = '<div id="main" class="menuTab select clickAble" onclick="moveMenu(this)">Main</div><div id="config" class="menuTab clickAble" onclick="moveMenu(this)">Config</div>';
 	$('#menu').html(output);
 	if(typeof userData.unlock.menu != 'undefined'){
-		if(userData.unlock.menu>0){ var output = '<div id="build" class="menuTab clickAble" onclick="moveMenu(this)">Build</div>'; $('#menu').children(':eq(0)').after(output); }
-		if(userData.unlock.menu>1){ var output = '<div id="skill" class="menuTab clickAble" onclick="moveMenu(this)">Skill</div>'; $('#menu').children(':eq(0)').after(output); }
-		if(userData.unlock.menu>2){ var output = '<div id="bag" class="menuTab clickAble" onclick="moveMenu(this)">Bag</div>'; $('#menu').children(':eq(0)').after(output); }
-		if(userData.unlock.menu>3){ var output = '<div id="shop" class="menuTab clickAble" onclick="moveMenu(this)">Shop</div>'; $('#menu').children(':eq(2)').after(output); }
+		if(userData.unlock.menu>1){ var output = '<div id="build" class="menuTab clickAble" onclick="moveMenu(this)">Build</div>'; $('#menu').children(':eq(0)').after(output); }
+		if(userData.unlock.menu>2){ var output = '<div id="skill" class="menuTab clickAble" onclick="moveMenu(this)">Skill</div>'; $('#menu').children(':eq(0)').after(output); }
+		if(userData.unlock.menu>3){ var output = '<div id="bag" class="menuTab clickAble" onclick="moveMenu(this)">Bag</div>'; $('#menu').children(':eq(0)').after(output); }
+		if(userData.unlock.menu>4){ var output = '<div id="shop" class="menuTab clickAble" onclick="moveMenu(this)">Shop</div>'; $('#menu').children(':eq(2)').after(output); }
 	}
 }
 var checkBuild = function(){
 	var list = ['farm','cityH','trainH'];
-	var output=''
+	var output='<tr><th>Name</th><th>costGold</th><th>needHonor</th><th>needFame</th><th></th></tr>'
 	for(var i=0; i<3; i++){
 		if(typeof userData.build == 'undefined'){userData.build={};}
 		if(typeof userData.build[list[i]] == 'undefined'){userData.build[list[i]]=0;}
@@ -513,7 +551,7 @@ var outputSkillDetail = function(arg){
 		if(kind=='passive'){
 			output += 'Current<br>'+obj.name+'<br>'+obj.add.toUpperCase();
 		}else if(kind == 'active'){
-			output += 'Current<br>'+obj.name+'<br>'+obj.effect.toUpperCase()+'<br>CostMP:'+obj.mp;
+			output += 'Current<br>'+obj.name+'<br>'+obj.effect.toUpperCase()+'<br>CostMP: '+obj.mp+'<br>CoolTime: '+obj.cool;
 		}
 	}else{
 		userData.skill[kind][sNum]=0;
@@ -526,7 +564,7 @@ var outputSkillDetail = function(arg){
 		if(kind == 'passive'){
 			output += 'Next<br>'+obj.name+'<br>'+obj.add.toUpperCase()+'<br>CostExp: '+costExp+'<br>CostGold: '+costGold;
 		}else if(kind == 'active'){
-			output += 'Next<br>'+obj.name+'<br>'+obj.effect.toUpperCase()+'<br>CostMP:'+obj.mp+'<br>CostExp: '+costExp+'<br>CostGold: '+costGold;
+			output += 'Next<br>'+obj.name+'<br>'+obj.effect.toUpperCase()+'<br>CostMP: '+obj.mp+'<br>Cooltime: '+obj.cool+'<br>CostExp: '+costExp+'<br>CostGold: '+costGold;
 		}
 	}
 	output += '<br>Lv '+userData.skill[kind][sNum]+'/'+Object.keys(skill[kind][sNum]).length;
@@ -557,13 +595,14 @@ var learnSkill = function(arg){
 				calStat();
 				statRefresh();
 			}else if(kind == 'active'){}
+			userData.stat.exp-=costExp;
+			userData.stat.gold-=costGold;
 			userData.skill[kind][sNum]+=1;
 		}else{printMsg('Not Enough Gold');}
 	}else{printMsg('Not Enough Exp');}
 }
 
 /*
-스킬 사용 시 쿨타임만큼 숫자쓰는 대신 반투명div로 덮었다가 남은 쿨타임에 비례해서 내려오기(0이면 크기0)
 design 업글하면 icon추가해주기 - checkstat 반복문 내 ouput에 링크걸기
 장비
 */
