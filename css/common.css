@@ -57,6 +57,7 @@ div.select{
 .bg-g{background-color: green;}
 .bg-y{background-color: #c4da0e;}
 .bg-y2{background-color: #859407;}
+.rText{text-align:right;}
 /*
 tr[id*="uStat"] td:nth-child(3){border-right: 1px solid;}
 */
@@ -107,16 +108,27 @@ tr[id*="uStat"] td:nth-child(3){border-right: 1px solid;}
 .tooltip:hover .tooltext {
 	visibility: visible;
 }
-/*
-button[id*=skill]{
-	min-width:60px;
-}
-*/
+
 img[id*=skill]{
-	width:48px;
-	height:48px;
-	margin: 5px 5px;
+	width:40px;
+	height:40px;
+	margin: 3px 5px;
 }
 img[id*=skill]:hover{
 	border: 2px solid #c134a3;
+}
+div[id*=cool]{
+	margin-top:-5px;
+	background-color:#ddd;
+	width:40px;
+	opacity:0.5;
+}
+div .skill{
+	display:inline-block;
+	width:54px;
+}
+#battleMsgPlace{
+	height:200px;
+	overflow-x:hedden;
+	overflow-y:auto;
 }
