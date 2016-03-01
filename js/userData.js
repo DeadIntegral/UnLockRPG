@@ -8,9 +8,9 @@ var userData = {
 	equip:{
 	},
 	unlock:{
-		stat:0,
+		stat:1,
 		eStat:0,
-		statBtn:0,
+		statBtn:1,
 		menu:0,
 		design:0,
 		idle:0
