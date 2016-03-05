@@ -357,7 +357,7 @@ var enemyData = {
 		pd:1800,
 		md:500,
 		exp:238,
-		unlock:26,
+		unlock:46,
 		unlockField:5
 	},
 	46:{
