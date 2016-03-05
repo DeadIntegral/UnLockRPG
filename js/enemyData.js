@@ -812,7 +812,7 @@ var enemyData = {
 		exp:350,
 		unlock:263
 	},
-	213:{
+	263:{
 		name:'미마스',
 		title:'[기가스]',
 		hp:72e5,
